@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header(checkbox = true)}" />
+<body class="top-navigation">
+	<div id="wrapper">
+	    <div id="page-wrapper" class="gray-bg">
+			<div th:replace="~{fragments/topbar :: topbar(page=mailbox)}" />
+
+	        <div class="wrapper wrapper-content">
+	        	<div class="row">
+		            <div class="col-lg-3">
+		                <div th:replace="~{fragments/mailbox_menu :: mailboxMenu}"></div>
+		            </div>
+		            <div class="col-lg-9 animated fadeInRight">
+			            <div class="mail-box-header">
+			                <div class="float-right tooltip-demo">
+			                    <a href="/mailbox/INBOX" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Annuller besked"><i class="fa fa-times"></i> Annuller</a>
+			                </div>
+			                <h2 th:if="${answer}">
+			                    Besvar besked fra <span th:text="${to}"></span>:
+			                </h2>
+			                <h2 th:if="${!answer}">
+			                    Send besked
+			                </h2>
+			            </div>
+                		<div class="mail-box">
+	                		<div class="col-lg-12">
+	                			<th:block th:if="${!answer}">
+		                			<div class="form-group row">
+	                        			<label class="col-lg-2 col-form-label">Modtager:</label>
+	                            		<div class="col-lg-10">
+	                            			<select class="form-control" id="recipient">
+												<option th:if="${selectedRecipient == null}" value="">Vælg modtager</option>
+	                            				<option th:each="recipient : ${recipients}" th:text="${recipient.fullOrganisationName}" th:value="${recipient.eanIdentifier}"
+														th:selected="${selectedRecipient != null && selectedRecipient.getIdentifier().equals(recipient.getIdentifier())}"></option>
+	                            			</select>
+	                            		</div>
+	                       			</div>
+									<div class="form-group row">
+										<label class="col-lg-2 col-form-label">Afsender:</label>
+										<div class="col-lg-10">
+											<select class="form-control" id="sender">
+												<option th:each="sender : ${senders}" th:text="${sender.organisationName} + ' (' + ${sender.identifier} + ')'"
+														th:value="${sender.identifier}" th:selected="${selectedSender != null && selectedSender.getIdentifier().equals(sender.getIdentifier())}"></option>
+											</select>
+										</div>
+									</div>
+	                       			<div class="form-group row">
+	                        			<label class="col-lg-2 col-form-label">Patient cpr:</label>
+	                            		<div class="col-lg-10">
+	                            			<input class="form-control" id="patientCpr" th:value="${patientCpr}">
+	                            		</div>
+	                       			</div>
+	                       			<div class="form-group row">
+	                        			<label class="col-lg-2 col-form-label">Patient navn:</label>
+	                            		<div class="col-lg-10">
+	                            			<input class="form-control" id="patientName" th:value="${patientName}">
+	                            		</div>
+	                       			</div>
+	                       			<div class="form-group row">
+	                        			<label class="col-lg-2 col-form-label">Patient status:</label>
+	                            		<div class="col-lg-10">
+	                            			<select class="form-control" id="patientStatus">
+	                            				<option th:each="status : ${T(dk.digitalidentity.medcommailbox.dao.model.enums.EpisodeOfCareStatusCode).values()}"
+														th:value="${status}" th:text="${status.displayValue}" th:selected="${selectedStatus != null && selectedStatus.ordinal() == status.ordinal()}"></option>
+	                            			</select>
+	                            		</div>
+	                       			</div>
+	                       			<div class="form-group row">
+                        				<label class="col-lg-2 col-form-label">Emne:</label>
+                            			<div class="col-lg-10">
+                            				<input type="text" class="form-control" id="subject" th:value="${subject}">
+                            			</div>
+                       				</div>
+                       			</th:block>
+                       			<th:block th:if="${answer}"> 
+                       				<p><strong>Patient: </strong> <span th:text="${patient.name} + ' (' + ${patient.cpr} + ' - ' + ${patient.episodeOfCareStatusCode.displayValue} + ')'"></span></p>
+                       				<p><strong>Emne: </strong> <span th:text="${subject}"></span></p>
+                       			</th:block>
+                       			<div class="form-group row">
+									<label class="col-lg-2 col-form-label">Høj prioritet:</label>
+									<div class="col-lg-10">
+										<label><input id="priority" type="checkbox" class="i-checks"></label>
+									</div>
+								</div>
+	               			</div>
+		                    <div class="col-lg-12">
+		                        <textarea id="content" class="form-control" rows="10" maxlength="25000"></textarea>
+	                        </div>
+	                        <p style="text-align: right; padding-right: 15px;"><span id="counter">0</span><span>/25.000</span></p>
+
+							<th:block th:if="${@medcomMailboxConfiguration.isAllowAttachments()}">
+								<div class="col-lg-12" style="margin-top: 20px;">
+									<h3>Vedhæftede filer:</h3>
+									<form id="uploadAttachmentForm" enctype="multipart/form-data" name="attachment">
+										<button class="btn btn-white" style="margin-bottom: 20px;" onclick="document.getElementById('fileUpload').click(); return false;"><i class="fa fa-paperclip"></i> Vedhæft fil</button>
+										<input type="file" name="file" id="fileUpload" style="display: none;"></input>
+									</form>
+									<ul style="list-style: none; padding-left: 0px;" id="attachments">
+									</ul>
+								</div>
+							</th:block>
+
+			                <div class="mail-body text-right tooltip-demo">
+		                        <button class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Send besked" onclick="mailService.send()"><i class="fa fa-reply"></i> Send</button>
+			                </div>
+                		</div>
+            		</div>
+		        </div>
+	        </div>
+	    </div>
+	</div>
+
+	<div th:replace="~{fragments/footer :: scripts(checkbox = true)}" />
+	
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		/*[+
+			var newMailId = [[${id}]];
+			var caseId = [[${caseId}]];
+			var answer = [[${answer}]];
+		+]*/
+		
+		var token = $("meta[name='_csrf']").attr("content");
+		var mailService;
+		$(document).ready(function() {
+			mailService = new MailService();
+			mailService.init();
+		});
+		
+		function MailService() {
+			this.init = function() {
+				$('#content').keyup(function() {
+					var characterCount = $(this).val().length;
+					$("#counter").text(characterCount);
+				});
+				
+				var characterCount = $('#content').val().length;
+				$("#counter").text(characterCount);
+				
+
+				$('#fileUpload').on('change', function() {
+					var file = this.files[0];
+					
+					if (file.size > (10 * 1024 * 1024)) {
+						this.value = ""; // clear selected file
+						$("#modal-attachment").modal("toggle");
+
+						setTimeout(function() {
+							toastr.warning('Den valgte fil er for stor (max 10 MB)');
+						}, 500);
+						
+						return;
+					}
+					
+					var filename = file.name;
+					var formData = new FormData($('#uploadAttachmentForm')[0]);
+					$.ajax({
+						url: "/rest/mails/" + newMailId + "/attachment/add",
+						type: 'POST',
+						headers: {
+							'X-CSRF-TOKEN': token
+						},
+						data: formData,
+						cache: false,
+						contentType: false,
+						processData: false,
+						success: function(data, textStatus, jQxhr) {
+							if (data != '') {
+								var ulElement = $('#attachments');
+								var txtHtml  = '<li id="attachment-' + data + '">\n';
+								    txtHtml += '<a style="color: black;" title="Slet vedhæftning" onclick="mailService.removeAttachment(' + data + ');"><em class="fa fa-fw fa-remove"></em></a>\n'; 
+								    txtHtml += '<span>' + filename + '</span>\n';
+								    txtHtml += '</li>';
+								
+								ulElement.append(txtHtml);
+							}
+	    			    },
+	    			    error: defaultErrorHandler
+					});
+				});
+
+			}
+
+			this.removeAttachment = function(id) {
+				$.ajax({
+					url: "/rest/mails/" + newMailId + "/attachment/" + id + "/delete",
+					type: 'POST',
+					headers: {
+						'X-CSRF-TOKEN': token
+					},
+					success: function(data, textStatus, jQxhr) {
+						$('#attachment-' + id).remove();
+    			    },
+    			    error: defaultErrorHandler
+				});
+			}
+
+			this.send = function() {
+				var recipient = "";
+				var patientName = "";
+				var patientCpr = "";
+				var patientStatus = "";
+				var subject = "";
+				var senderIdentifier = "";
+				if (!answer) {
+					recipient = $("#recipient").val();
+					patientName = $("#patientName").val();
+					patientCpr = $("#patientCpr").val();
+					patientStatus = $("#patientStatus").val();
+					subject = $("#subject").val();
+					senderIdentifier = $("#sender").val();
+				}
+				
+				$.ajax({
+					url: "/rest/mails/" + newMailId + "/send",
+					type : 'post',
+					contentType: 'application/json',
+					headers: {
+						'X-CSRF-TOKEN': token
+					},
+					data : JSON.stringify({
+						subject : subject,
+						content : $("#content").val(),
+						recipientEan : recipient,
+						answer : answer,
+						patientStatus: patientStatus,
+						patientName: patientName,
+						patientCpr: patientCpr,
+						highPriority: $("#priority").prop("checked"),
+						senderIdentifier: senderIdentifier,
+						caseId: caseId
+					}),
+					success: function(data, textStatus, jQxhr) {
+						if (data == null || data == "") {
+							toastr.success("Beskeden er sendt!");
+							setTimeout(() => {window.location.href="/mailbox/INBOX"}, 1000);
+						} else {
+							toastr.success("Beskeden er sendt! " + data);
+							setTimeout(() => {window.location.href="/mailbox/INBOX"}, 5000);
+						}
+						
+    			    },
+    			    error: defaultErrorHandler
+				});
+			}
+		}
+
+        
+
+		/*]]>*/
+	</script>
+</body>
+</html>

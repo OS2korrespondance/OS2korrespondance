@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header}"></head>
+<body class="top-navigation">
+	<div id="wrapper">
+	    <div id="page-wrapper" class="gray-bg">
+			<div th:replace="~{fragments/topbar :: topbar}"></div>
+
+	        <div class="wrapper wrapper-content">
+	            <div class="row">
+	                <div class="col-lg-10 offset-lg-1">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5 sec:authorize="!isAuthenticated()"><em class="fa fa-user"></em> &nbsp; Login</h5>
+                            </div>
+		
+                            <div class="ibox-content" >
+	                        	<a sec:authorize="!isAuthenticated()" style="font-size: 1.5em;" class="btn btn-primary full-width" th:href="@{/mailbox/INBOX}">Login</a>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+	<div th:replace="~{fragments/footer :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,4 @@
+ALTER TABLE patient ADD COLUMN street_name VARCHAR(35) NULL;
+ALTER TABLE patient ADD COLUMN suburb_name VARCHAR(35) NULL;
+ALTER TABLE patient ADD COLUMN district_name VARCHAR(35) NULL;
+ALTER TABLE patient ADD COLUMN post_code_identifier VARCHAR(9) NULL;

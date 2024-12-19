@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>dk.digitalidentity</groupId>
+	<artifactId>medcom-mailbox</artifactId>
+	<version>1.0.0</version>
+	<name>medcom-mailbox</name>
+	
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.3.3</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+
+	
+	<properties>
+		<java.version>21</java.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.awspring.cloud</groupId>
+				<artifactId>spring-cloud-aws-dependencies</artifactId>
+				<version>3.1.1</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.thymeleaf.extras</groupId>
+			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>dk.digitalidentity.webjars</groupId>
+			<artifactId>inspinia-webjar-lib</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.11.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>1.78.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>dk.digitalidentity</groupId>
+			<artifactId>saml-module</artifactId>
+			<version>4.0.11</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${lombok.version}</version>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>io.awspring.cloud</groupId>
+			<artifactId>spring-cloud-aws-starter-s3</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<version>2.1.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.darrachequesne</groupId>
+			<artifactId>spring-data-jpa-datatables</artifactId>
+			<version>6.0.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.xhtmlrenderer</groupId>
+			<artifactId>flying-saucer-pdf</artifactId>
+			<version>9.5.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.xmlunit</groupId>
+			<artifactId>xmlunit-core</artifactId>
+			<scope>test</scope>
+			<version>2.9.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.xmlunit</groupId>
+			<artifactId>xmlunit-assertj</artifactId>
+			<scope>test</scope>
+			<version>2.9.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>mysql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jvnet.jaxb</groupId>
+				<artifactId>jaxb-maven-plugin</artifactId>
+				<version>4.0.8</version>
+				<executions>
+					<execution>
+						<id>generate</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-sources</phase>
+						<configuration>
+							<generateDirectory>${project.build.directory}/generated-sources/xjc/</generateDirectory>
+							<schemaIncludes>
+								<includes>xsd/2005/08/07/EMessage.xsd</includes>
+							</schemaIncludes>
+							<bindingIncludes>
+								<include>**/*.xjb</include>
+							</bindingIncludes>
+							<cleanPackageDirectories>true</cleanPackageDirectories>
+							<args>
+								<arg>-XautoNameResolution</arg>
+							</args>
+						</configuration>
+					</execution>
+					<execution>
+						<id>medcom2006</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-resources</phase>
+
+						<configuration>
+							<generateDirectory>${project.build.directory}/generated-sources/xjc/</generateDirectory>
+							<schemaIncludes>
+								<includes>xsd/2006/07/01/EMessage.xsd</includes>
+							</schemaIncludes>
+							<bindingIncludes>
+								<include>**/*.xjb</include>
+							</bindingIncludes>
+							<bindings>
+								<binding>
+									<fileset>
+										<directory>${project.build.directory}/generated-sources/xjc/META-INF</directory>
+										<includes>
+											<include>sun-jaxb.episode</include>
+										</includes>
+									</fileset>
+								</binding>
+							</bindings>
+							<args>
+								<arg>-XautoNameResolution</arg>
+							</args>
+							<cleanPackageDirectories>true</cleanPackageDirectories>
+						</configuration>
+					</execution>
+					<execution>
+						<id>medcom2012</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-resources</phase>
+
+						<configuration>
+							<generateDirectory>${project.build.directory}/generated-sources/xjc/</generateDirectory>
+							<schemaIncludes>
+								<includes>xsd/2012/03/28/EMessage.xsd</includes>
+							</schemaIncludes>
+							<bindingIncludes>
+								<include>**/*.xjb</include>
+							</bindingIncludes>
+							<bindings>
+								<binding>
+									<fileset>
+										<directory>${project.build.directory}/generated-sources/xjc/META-INF</directory>
+										<includes>
+											<include>sun-jaxb.episode</include>
+										</includes>
+									</fileset>
+								</binding>
+							</bindings>
+							<args>
+								<arg>-XautoNameResolution</arg>
+							</args>
+							<cleanPackageDirectories>true</cleanPackageDirectories>
+						</configuration>
+					</execution>
+					<execution>
+						<id>medcom2016</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-resources</phase>
+
+						<configuration>
+							<generateDirectory>${project.build.directory}/generated-sources/xjc/</generateDirectory>
+							<schemaIncludes>
+								<includes>xsd/2016/12/01/EMessage.xsd</includes>
+							</schemaIncludes>
+							<bindingIncludes>
+								<include>**/*.xjb</include>
+							</bindingIncludes>
+							<bindings>
+								<binding>
+									<fileset>
+										<directory>${project.build.directory}/generated-sources/xjc/META-INF</directory>
+										<includes>
+											<include>sun-jaxb.episode</include>
+										</includes>
+									</fileset>
+								</binding>
+							</bindings>
+							<args>
+								<arg>-XautoNameResolution</arg>
+							</args>
+							<cleanPackageDirectories>true</cleanPackageDirectories>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>1-maven-repository</id>
+			<name>Maven Repository</name>
+			<url>https://repo.maven.apache.org/maven2/</url>
+		</repository>
+
+		<repository>
+			<id>2-shared-resources</id>
+			<name>Shared Resources</name>
+			<url>https://mvn.digital-identity.dk/release</url>
+		</repository>
+	</repositories>
+</project>

@@ -1,0 +1,1 @@
+ALTER TABLE mail ADD COLUMN associated_identifier VARCHAR(17) NULL;

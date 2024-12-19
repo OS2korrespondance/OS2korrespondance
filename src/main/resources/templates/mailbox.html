@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header(datatables = true)}" />
+<body class="top-navigation">
+	<div id="wrapper">
+	    <div id="page-wrapper" class="gray-bg">
+			<div th:replace="~{fragments/topbar :: topbar(page=mailbox)}" />
+
+	        <div class="wrapper wrapper-content">
+		        <div class="row">
+		            <div class="col-lg-3">
+		                <div th:replace="~{fragments/mailbox_menu :: mailboxMenu}"></div>
+		            </div>
+		            <div class="col-lg-9 animated fadeInRight">
+		            	<div class="mail-box-header">
+			                <h2>
+								<th:block th:if="${inboxFolder != null}">
+									<span th:text="${inboxFolder.name}"></span>
+								</th:block>
+								<th:block th:unless="${inboxFolder != null}">
+									<span th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}">Indbakke </span>
+									<span th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).ARCHIVE}">Arkiv </span>
+									<span th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}">Sendte beskeder </span>
+									<span th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED}">Slettede beskeder </span>
+								</th:block>
+			                    <span th:text="'(' + ${folderCount} + ')'"></span>
+			                </h2>
+			                <div class="mail-tools tooltip-demo m-t-md" th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}">
+			                    <button class="btn btn-white btn-sm" data-toggle="tooltip" data-placement="left" title="Refresh indbakke" onclick="window.location.reload()"><i class="fa fa-refresh"></i> Hent beskeder</button>
+			                </div>
+		            	</div>
+		                <div class="mail-box">
+		                	<table class="table table-hover table-mail col-lg-12">
+		                		<thead>
+									<tr>
+										<th hidden>id</th>
+										<th style="max-width: 0px;">Høj prioritet</th>
+										<th class="col-lg-2">Afsender</th>
+										<th class="col-lg-2">Lokationsnummer</th>
+										<th class="col-lg-6">Emne</th>
+										<th class="col-lg-1">Vedhæftninger</th>
+										<th class="col-lg-2">Dato</th>
+										<th style="display: none"></th>
+									</tr>
+								</thead>
+				                <tbody>
+					                <tr th:each="mail: ${mails}" th:class="${mail.read} ? 'read' : 'unread'">
+					                	<td class="mail-id" th:text="${mail.id}" hidden></td>
+					                	<td><em th:if="${mail.highPriority}" class="fa fa-star" style="color: #E5C04D" title="Høj prioritet"></em></td>
+					                    <td class="mail-column" th:text="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT} ? 'til: ' + ${mail.recipient.fullOrganisationName} : ${mail.sender.fullOrganisationName}"></td>
+										<td th:if="${mail.associatedIdentifier != null}" class="mail-column" th:text="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX} ? 'til: ' + ${mail.associatedIdentifier} : 'fra: ' + ${mail.associatedIdentifier}"></td>
+										<td th:unless="${mail.associatedIdentifier != null}" class="mail-column"></td>
+										<td class="mail-column"><span th:if="${mail.receivedNegativeReceipt && folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="label label-danger">Negativ kvittering</span> <span th:text="${mail.subject}"></span></td>
+										<td class="mail-column"><i th:if="${mail.references!=null and !mail.references.empty}" class="fa fa-paperclip"></i></td>
+					                    <td th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="text-right mail-column" th:text="${#temporals.format(mail.sent, 'dd/MM/yyyy HH:mm')}"></td>
+					                    <td th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="text-right mail-column" th:text="${#temporals.format(mail.received, 'dd/MM/yyyy HH:mm')}"></td>
+										<td style="display: none" th:text="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT ? #temporals.format(mail.sent, 'yyyyMMddHHmm') : #temporals.format(mail.received, 'yyyyMMddHHmm')}"></td>
+					                </tr>
+				                </tbody>
+		                	</table>
+		                </div>
+		            </div>
+		        </div>
+	        </div>
+	    </div>
+	</div>
+
+	<div th:replace="~{fragments/footer :: scripts(datatables = true)}"></div>
+	
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		/*[+
+		+]*/
+		
+		var token = $("meta[name='_csrf']").attr("content");
+		var mailboxService;
+		$(document).ready(function() {
+			mailboxService = new MailboxService();
+			
+			mailboxService.init();
+		});
+		
+		function MailboxService() {
+			$("td.mail-column").on('click', function(event){
+				var id = $(this).siblings(".mail-id").text();
+				location.href= '/mail/' + id;
+			});
+			
+			this.init = function() {
+				var table = $('.table-mail').DataTable({
+					"pageLength" : 25,
+					"bLengthChange": false,
+					"responsive" : true,
+					"autoWidth": false,
+					"order": [ 7, 'desc' ],
+					"language" : {
+						"search" : "Søg",
+						"lengthMenu" : "_MENU_ beskeder per side",
+						"info" : "Viser _START_ til _END_ af _TOTAL_ beskeder",
+						"zeroRecords" : "Ingen data...",
+						"infoEmpty" : "Henter data...",
+						"infoFiltered" : "(ud af _MAX_ beskeder)",
+						"paginate" : {
+							"previous" : "Forrige",
+							"next" : "Næste"
+						}
+					}
+				});
+
+			}
+		}
+
+        
+
+		/*]]>*/
+	</script>
+</body>
+</html>

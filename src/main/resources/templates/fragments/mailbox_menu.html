@@ -1,0 +1,30 @@
+<th:block th:fragment="mailboxMenu" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+	<div class="ibox ">
+	    <div class="ibox-content mailbox-content" style="padding-top: 0px;">
+	        <div class="file-manager">
+	        	<a class="btn btn-block btn-primary compose-mail" href="/mail/new" style="font-size: larger; margin-bottom: 30px">Send besked</a>
+	            <h2>Mapper</h2>
+	            <ul class="folder-list m-b-md" style="padding: 0">
+	                <li style="font-size: larger;">
+						<a href="/mailbox/INBOX">
+							<i class="fa fa-inbox "></i> Indbakke
+							<span th:if="${inboxUnreadCount > 0}" class="label label-primary float-right" th:text="${inboxUnreadCount}"></span>
+						</a>
+						<ul>
+							<li th:each="inboxFolder : ${inboxFolders}">
+								<a th:href="'/mailbox/INBOX?folder=' + ${inboxFolder.id}">
+									<i class="fa fa-folder "></i> &nbsp;
+									<span th:text="${inboxFolder.name}"></span>
+								</a>
+							</li>
+						</ul>
+					</li>
+	                <li style="font-size: larger;"><a href="/mailbox/SENT"> <i class="fa fa-envelope-o"></i> Sendte beskeder <span th:if="${negativeReceiptCount > 0}" class="label label-danger float-right" th:text="${negativeReceiptCount}"></span></a></li>
+	                <li style="font-size: larger;"><a href="/mailbox/ARCHIVE"> <i class="fa fa-archive"></i> Arkiv </a></li>
+	                <li style="font-size: larger;"><a href="/mailbox/DELETED"> <i class="fa fa-trash"></i> Slettede beskeder </a></li>
+	            </ul>
+	            <div class="clearfix"></div>
+	        </div>
+	    </div>
+	</div>
+</th:block>

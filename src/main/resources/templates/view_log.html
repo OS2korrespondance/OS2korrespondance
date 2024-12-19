@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header(codemirror = true)}" />
+<body class="top-navigation">
+	<div id="wrapper">
+	    <div id="page-wrapper" class="gray-bg">
+			<div th:replace="~{fragments/topbar :: topbar(page=logs)}" />
+
+	        <div class="wrapper wrapper-content">
+		        <div class="row">
+		            <div class="col-lg-1">
+		            </div>
+		            <div class="col-lg-10">
+		            	<div class="ibox">
+							<div class="ibox-title">
+								<h5><em class="fa fa-bars"></em> &nbsp; Log</h5>
+							</div>
+
+							<div class="ibox-content">
+								<p><strong th:if="${log.incomming}">Besked modtaget:</strong><strong th:unless="${log.incomming}">Besked afsendt:</strong> <span th:if="${log.mailTts != null}" th:text="${#temporals.format(log.mailTts, 'yyyy-MM-dd HH:mm')}"></span></p>
+								<p><strong th:if="${log.incomming}">Kvittering afsendt:</strong><strong th:unless="${log.incomming}">Kvittering modtaget:</strong> <span th:if="${log.receiptTts != null}" th:text="${#temporals.format(log.receiptTts, 'yyyy-MM-dd HH:mm')}"></span></p>
+								<p><strong>Kvitteringstype:</strong> <span th:if="${log.receiptType != null}" th:text="${log.receiptType.displayValue}"></span></p>
+								<p th:if="${log.negativeReceiptReason != null}"><strong>Evt. afvisningsgrund:</strong></p>
+								<p th:if="${log.negativeReceiptReason != null}" th:utext="${log.negativeReceiptReason}"></p>
+								
+								<th:block th:if="${log.receiptXml != null}">
+									<p style="margin-top: 20px;"><strong>Kvittering xml: </strong></p>
+									<textarea id="receiptXml" class="col-lg-12" rows=10 th:utext="${log.receiptXml}"></textarea>
+								</th:block >
+
+								<th:block th:if="${log.mailXml != null}">
+									<p style="margin-top: 20px;"><strong>Besked xml: </strong></p>
+									<textarea id="mailXml" class="col-lg-12" rows=10 th:text="${log.mailXml}"></textarea>
+								</th:block >
+								
+								<th:block th:if="${log.mailXml != null || log.receiptXml != null}">
+									<p style="margin-top: 20px;">Beskeder og kvitteringer sendes og modtages med encoding ISO-8859-1, men vises her i UTF-8 for læsbarhedens skyld.</p>
+								</th:block >
+							</div>
+						</div>
+		            </div>
+		        </div>
+	        </div>
+	    </div>
+	</div>
+
+	<div th:replace="~{fragments/footer :: scripts(codemirror = true)}" />
+	
+	<script th:inline="javascript">
+	/*<![CDATA[*/
+
+		var loginService;
+		$("document").ready(function() {
+			CodeMirror.fromTextArea($("#mailXml")[0], {
+				mode: "application/xml"
+			});
+			CodeMirror.fromTextArea($("#receiptXml")[0], {
+				mode: "application/xml"
+			});
+		});
+
+	/*]]>*/
+	</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+version: '3.3'
+services:
+  db:
+    image: mariadb:10.6.14
+    environment:
+      MARIADB_DATABASE: 'medcom_mailbox'
+      MARIADB_ROOT_PASSWORD: 'Test1234'
+    ports:
+      - "3306:3306"
+    expose:
+      - '3306'
+    volumes:
+      - medbox-db:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+
+volumes:
+  medbox-db:

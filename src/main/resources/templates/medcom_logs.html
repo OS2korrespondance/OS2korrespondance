@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header(datatables = true)}" />
+<body class="top-navigation">
+	<div id="wrapper">
+	    <div id="page-wrapper" class="gray-bg">
+			<div th:replace="~{fragments/topbar :: topbar(page=medcomlogs)}" />
+
+	        <div class="wrapper wrapper-content">
+		        <div class="row">
+		            <div class="col-lg-1">
+		            </div>
+		            <div class="col-lg-10">
+		            	<div class="ibox">
+							<div class="ibox-title">
+								<h5><em class="fa fa-bars"></em> &nbsp; Log</h5>
+							</div>
+
+							<div class="ibox-content">
+								<p><strong>Log over sendte beskeder og modtagne kvitteringer:</strong></p>
+								<table id="outgoing" class="table table-hover col-lg-12">
+			                		<thead>
+										<tr>
+											<th class="col-lg-1">Status</th>
+											<th class="col-lg-2">Besked afsendt</th>
+											<th class="col-lg-2">Kvittering modtaget</th>
+											<th class="col-lg-2">Kvitteringstype</th>
+											<th class="col-lg-4">Evt. afvisningsgrund</th>
+											<th class="col-lg-1">Handlinger</th>
+										</tr>
+									</thead>
+					                <tbody>
+						                <tr th:each="log: ${logsOutgoing}">
+						                	<td th:if="${log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).POSITIVE && log.mailTts != null}" title="Positiv kvittering"><em class="fa-fw fa fa-circle" style="color: green; font-size: 20px;"></em></td>
+								        	<td th:if="${(log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).NEGATIVE || log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).NEGATIVE_VANS) && log.mailTts != null}" title="Negativ kvittering"><em class="fa-fw fa fa-circle" style="color: red; font-size: 20px;"></em></td>
+								        	<td th:if="${log.receiptType !=null && log.mailTts == null}" title="Ukendt kvittering"><em class="fa-fw fa fa-exclamation-triangle" style="color: orange; font-size: 20px;"></em></td>
+								        	<td th:if="${log.receiptType == null}" title="Ingen kvittering modtaget"><em class="fa-fw fa fa-circle" style="color: grey; font-size: 20px;"></em></td>
+						                    <td>
+						                    	<span th:if="${log.mailTts != null}" th:text="${#temporals.format(log.mailTts, 'yyyy-MM-dd HH:mm')}"></span>
+						                    </td>
+						                    <td>
+						                    	<span th:if="${log.receiptTts != null}" th:text="${#temporals.format(log.receiptTts, 'yyyy-MM-dd HH:mm')}"></span>
+						                    </td>
+						                    <td>
+						                    	<span th:if="${log.receiptType != null}" th:text="${log.receiptType.displayValue}"></span>
+						                    </td>
+						                    <td>
+						                    	<span th:if="${log.negativeReceiptReason != null}" th:text="${log.negativeReceiptReason}"></span>
+						                    </td>
+						                    <td>
+						                    	<a th:href="${'/logs/' + log.id}"><em class="fa fa-search" style="color: black;" title="Se logdetaljer"></em></a>
+						                    </td>
+						                </tr>
+					                </tbody>
+			                	</table>
+								<br/>
+								<p><strong>Log over modtagne beskeder og sendte kvitteringer:</strong></p>
+								<table id="incomming" class="table table-hover col-lg-12">
+			                		<thead>
+										<tr>
+											<th class="col-lg-1">Status</th>
+											<th class="col-lg-2">Besked modtaget</th>
+											<th class="col-lg-2">Kvittering afsendt</th>
+											<th class="col-lg-2">Kvitteringstype</th>
+											<th class="col-lg-4">Evt. afvisningsgrund</th>
+											<th class="col-lg-1">Handlinger</th>
+										</tr>
+									</thead>
+					                <tbody>
+						                <tr th:each="log: ${logsIncomming}">
+						                	<td th:if="${log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).POSITIVE}" title="Positiv kvittering"><em class="fa-fw fa fa-circle" style="color: green; font-size: 20px;"></em></td>
+								        	<td th:if="${log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).NEGATIVE}" title="Negativ kvittering"><em class="fa-fw fa fa-circle" style="color: red; font-size: 20px;"></em></td>
+								        	<td th:if="${log.receiptType == null}" title="Ingen kvittering sendt"><em class="fa-fw fa fa-circle" style="color: grey; font-size: 20px;"></em></td>
+						                    <td>
+						                    	<span th:if="${log.mailTts != null}" th:text="${#temporals.format(log.mailTts, 'yyyy-MM-dd HH:mm')}"></span>
+						                    </td>
+						                    <td>
+						                    	<span th:if="${log.receiptTts != null}" th:text="${#temporals.format(log.receiptTts, 'yyyy-MM-dd HH:mm')}"></span>
+						                    </td>
+						                    <td>
+						                    	<span th:if="${log.receiptType != null}" th:text="${log.receiptType.displayValue}"></span>
+						                    </td>
+						                    <td>
+						                    	<span th:if="${log.negativeReceiptReason != null}" th:text="${log.negativeReceiptReason}"></span>
+						                    </td>
+						                    <td>
+						                    	<a th:href="${'/logs/' + log.id}"><em class="fa fa-search" style="color: black;" title="Se logdetaljer"></em></a>
+						                    </td>
+						                </tr>
+					                </tbody>
+			                	</table>
+							</div>
+						</div>
+		            </div>
+		        </div>
+	        </div>
+	    </div>
+	</div>
+
+	<div th:replace="~{fragments/footer :: scripts(datatables = true)}" />
+	
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		/*[+
+		+]*/
+		
+		var token = $("meta[name='_csrf']").attr("content");
+		var logService;
+		$(document).ready(function() {
+			logService = new LogService();
+			
+			logService.init();
+		});
+		
+		function LogService() {
+			
+			this.init = function() {
+				var outgoing = $('#outgoing').DataTable({
+					"pageLength" : 10,
+					"bLengthChange": false,
+					"responsive" : true,
+					"autoWidth": false,
+					"columnDefs": [
+						{ "orderable": false, "searchable": false, "targets": 0 },
+					    { "orderable": false, "searchable": false, "targets": 5 }
+					  ],
+					"order": [ 1, 'desc' ],
+					"language" : {
+						"search" : "Søg",
+						"lengthMenu" : "_MENU_ logs per side",
+						"info" : "Viser _START_ til _END_ af _TOTAL_ logs",
+						"zeroRecords" : "Ingen data...",
+						"infoEmpty" : "Henter data...",
+						"infoFiltered" : "(ud af _MAX_ logs)",
+						"paginate" : {
+							"previous" : "Forrige",
+							"next" : "Næste"
+						}
+					}
+				});
+				
+				var incomming = $('#incomming').DataTable({
+					"pageLength" : 10,
+					"bLengthChange": false,
+					"responsive" : true,
+					"autoWidth": false,
+					"columnDefs": [
+						{ "orderable": false, "searchable": false, "targets": 0 },
+						{ "orderable": false, "searchable": false, "targets": 5 }
+					  ],
+					"order": [ 1, 'desc' ],
+					"language" : {
+						"search" : "Søg",
+						"lengthMenu" : "_MENU_ logs per side",
+						"info" : "Viser _START_ til _END_ af _TOTAL_ logs",
+						"zeroRecords" : "Ingen data...",
+						"infoEmpty" : "Henter data...",
+						"infoFiltered" : "(ud af _MAX_ logs)",
+						"paginate" : {
+							"previous" : "Forrige",
+							"next" : "Næste"
+						}
+					}
+				});
+					
+			}
+		}
+
+        
+
+		/*]]>*/
+	</script>
+</body>
+</html>
