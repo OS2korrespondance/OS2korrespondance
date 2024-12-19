@@ -1,0 +1,41 @@
+.navActive {
+	font-weight: bold !important;
+	color: #1ab394 !important;
+}
+
+table.table-mail > thead {
+	visibility: collapse !important;
+}
+
+table.table-mail {
+	border-collapse: separate !important;
+	border-spacing: 0px 0px !important;
+}
+
+.mail-column {
+	cursor: pointer;
+}
+
+pre {
+    word-break: break-word;
+    white-space: pre-wrap;
+    -moz-white-space: pre-wrap;
+}
+
+/*Rules for viewing on a smaller device*/
+@media only screen and (max-width: 990px) {
+	table {
+	    border-spacing: 0px;
+	    table-layout: fixed;
+	    margin-left: auto;
+	    margin-right: auto;
+	}
+
+	td {
+	    word-wrap: break-word;
+	}
+	
+	.web-only {
+	 	display: none !important;
+	}
+}

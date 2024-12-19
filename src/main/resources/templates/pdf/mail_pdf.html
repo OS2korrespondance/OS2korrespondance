@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        pre {
+            display: block;
+            padding: 9.5px;
+            margin: 0 0 10px;
+            font-size: 13px;
+            line-height: 1.42857143;
+            color: #333;
+            word-break: break-word;
+            white-space: pre-wrap;
+            -moz-white-space: pre-wrap;
+            background-color: #eff2f3;
+            border: 1px solid #d1dade;
+            border-radius: 2px;
+        }
+
+    </style>
+</head>
+<body>
+	<div>
+        <h2 th:text="'Emne: ' + ${mail.subject}"></h2>
+        <div>
+            <h5>
+                <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:text="${#temporals.format(mail.sent, 'dd/MM/yyyy HH:mm')}"></span>
+                <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:text="${#temporals.format(mail.received, 'dd/MM/yyyy HH:mm')}"></span>
+                <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:utext="'<strong>Fra:</strong> ' + ${mail.sender.fullOrganisationName}"></span>
+                <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:utext="'<strong>Til:</strong> ' + ${mail.recipient.fullOrganisationName}"></span>
+            </h5>
+        </div>
+        <p th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:if="${mail.senderDepartmentName != null}"><strong>Afsenders afdelingsnavn: </strong><span th:text="${mail.senderDepartmentName}"></span></p>
+        <p th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:if="${mail.senderMedicalSpecialityCode != null}"><strong>Afsenders medicinske speciale: </strong><span th:text="${mail.senderMedicalSpecialityCode.displayValue}"></span></p>
+        <p>
+            <strong>Patient:</strong>
+            <span th:text="${mail.patient.name} + ' (' + ${mail.patient.cpr} + ' - ' + ${mail.patient.episodeOfCareStatusCode.displayValue} + ')'"></span>
+            <span th:if="${mail.patient.streetName != null}" th:text="'- ' + ${mail.patient.streetName}"></span>
+            <span th:if="${mail.patient.suburbName != null}" th:text="', ' + ${mail.patient.suburbName}"></span>
+            <span th:if="${mail.patient.postCodeIdentifier != null}" th:text="', ' + ${mail.patient.postCodeIdentifier}"></span>
+            <span th:if="${mail.patient.districtName != null}" th:text="' ' + ${mail.patient.districtName}"></span>
+        </p>
+        <p th:if="${mail.highPriority}"><span>Høj prioritet</span></p>
+    </div>
+
+    <div class="mail-box">
+        <pre class="mail-body" style="border: 0px; background: #FAFAFA;" th:utext="${content}"></pre>
+    </div>
+</body>
+</html>

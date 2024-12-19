@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://rep.oio.dk/medcom.dk/xml/schemas/2020/06/15/" xmlns="http://rep.oio.dk/medcom.dk/xml/schemas/2020/06/15/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cpr="http://rep.oio.dk/cpr.dk/xml/schemas/core/2002/06/28/" xmlns:dkcc="http://rep.oio.dk/ebxml/xml/schemas/dkcc/2003/02/13/" elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <xs:include schemaLocation="GeneralElements.xsd"/>
+    <xs:complexType name="ActionPriorityType">
+        <xs:sequence>
+        <xs:element name="ActionPriorityCode" type="ActionPriorityCodeType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="ActionPriorityCodeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Rutine"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

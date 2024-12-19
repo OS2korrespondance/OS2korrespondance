@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://rep.oio.dk/medcom.dk/xml/schemas/2016/04/28/" 
+	xmlns:dkcc="http://rep.oio.dk/ebxml/xml/schemas/dkcc/2003/02/13/" xmlns:cpr="http://rep.oio.dk/cpr.dk/xml/schemas/core/2002/06/28/" 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://rep.oio.dk/medcom.dk/xml/schemas/2016/04/28/" 
+	xmlns:dntz="http://rep.oio.dk/medcom.dk/xml/schemas/2016/09/23/"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:import schemaLocation="../../../2016/09/23/date_no_tz.xsd" namespace="http://rep.oio.dk/medcom.dk/xml/schemas/2016/09/23/"/>
+	<xs:include schemaLocation="GeneralElements.xsd"/>
+	<xs:include schemaLocation="LetterType.xsd"/>
+	<xs:include schemaLocation="Sender.xsd"/>
+	<xs:include schemaLocation="Receiver.xsd"/>
+	<xs:include schemaLocation="Patient.xsd"/>
+	<xs:element name="GynecologyInvoice" type="GynecologyInvoiceType">
+		<xs:annotation>
+			<xs:documentation>Gynækologi Afregning</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="GynecologyInvoiceType">
+		<xs:annotation>
+			<xs:documentation>Definition af en Gynækologi lægeregning</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Letter" type="GynecologyInvoiceLetterType">
+				<xs:annotation>
+					<xs:documentation>Kan betragtes som et Letter element, som blot begrænses til VersionCode=U2540U og TypeCode=RUC25</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Sender" type="GynecologyInvoiceSenderType"/>
+			<xs:element name="Receiver" type="GynecologyInvoiceRecieverType"/>
+			<xs:element name="LetterBuildDate"> <!-- Afregng lavet -->
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Year">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="10000"/>
+									<xs:minExclusive value="1990"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Month">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="13"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Date">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="32"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Hour">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="25"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Minute">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="60"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="InvoiceStartDate">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Year">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="10000"/>
+									<xs:minExclusive value="1990"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Month">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="13"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Date">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="32"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Hour">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="25"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Minute">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="60"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="InvoiceEndDate">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Year">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="10000"/>
+									<xs:minExclusive value="1990"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Month">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="13"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Date">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="32"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Hour">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="25"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Minute">
+							<xs:simpleType>
+								<xs:restriction base="xs:int">
+									<xs:maxExclusive value="60"/>
+									<xs:minExclusive value="0"/> 
+								</xs:restriction> 
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Name" type="String_1_35"/>
+			<xs:element name="Version" type="String_1_35"/>
+			<xs:element name="NoOFBills" type="Int_1_999999" />
+			<xs:element name="Amount">
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:maxExclusive value="999999999999999999"/>
+						<xs:minInclusive value="0"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Invoice" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+							<xs:element name="Comment" minOccurs="0" maxOccurs="1" type="String_1_70"/> 
+						<xs:element name="Insured">		        	
+							<xs:complexType>
+								<xs:sequence>
+									<xs:choice>
+										<xs:element ref="CivilRegistrationNumber"/>
+										<xs:sequence>
+											<xs:element name="AlternativeIdentifier" type="InvoiceReplacementCPRType"/>
+											<xs:element name="CountryCode" type="xs:positiveInteger"/>
+										</xs:sequence>
+									</xs:choice>
+								</xs:sequence>  
+							</xs:complexType>
+						</xs:element>
+						
+						
+						<xs:element name="Activity">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="Correction" minOccurs="0" maxOccurs="1">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:pattern value="[0-9]{1,4}|[C]"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element> 
+									<xs:element name="DateOfTreatment" type="dntz:dateNoTZ"/>
+									<xs:element name="TimeOfTreatment" minOccurs="0" maxOccurs="1">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:pattern value="(([0-1][0-9])|(2[0-3])):([0-5][0-9])"/> 
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+									<xs:element name="SatellitLocation" minOccurs="0" maxOccurs="1">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:minLength value="1"/> 
+												<xs:maxLength value="35"/>
+											</xs:restriction> 
+										</xs:simpleType>
+									</xs:element>
+									<xs:element name="ReferralID" minOccurs="0" maxOccurs="1">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:minLength value="1"/> 
+												<xs:maxLength value="35"/>
+											</xs:restriction> 
+										</xs:simpleType>
+									</xs:element>
+									<xs:element name="InterpreterBookingID" minOccurs="0" maxOccurs="1">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:minLength value="1"/> 
+												<xs:maxLength value="35"/>
+											</xs:restriction> 
+										</xs:simpleType>
+									</xs:element>
+									<xs:element name="InvoiceID" minOccurs="1" maxOccurs="1">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:minLength value="1"/> 
+												<xs:maxLength value="35"/>
+											</xs:restriction> 
+										</xs:simpleType>
+									</xs:element>
+									<xs:element name="Statistic15abcde" minOccurs="0" type="String_1_6"/>
+									
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="Rules" minOccurs="0">
+							<xs:complexType>
+								<xs:sequence>				
+									<xs:element name="InsuranceCard" minOccurs="0">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:length value="1"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+				<xs:element name="Service" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="Rate">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:pattern value="[0-9]{1,4}"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+									
+									<xs:element name="ReadAcross" minOccurs="0" maxOccurs="1">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:maxLength value="70"></xs:maxLength>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+									
+									<xs:element name="Amount">
+										<xs:simpleType>
+											<xs:restriction base="xs:int">
+												<xs:maxExclusive value="100"/>
+												<xs:minExclusive value="0"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+								<xs:element name="PractitionerID" minOccurs="0">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:maxLength value="11"/>
+												<xs:minLength value="0"/>
+												</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+									<xs:element name="CodeList" minOccurs="0">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:maxLength value="4"/>
+												<xs:minLength value="0"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+									<xs:element name="CodeListResponsible" minOccurs="0">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:maxLength value="4"/>
+												<xs:minLength value="0"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+									<xs:element name="PractitionerType" minOccurs="0">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:maxLength value="18"/>
+												<xs:minLength value="0"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="GynecologyInvoiceLetterType">
+		<xs:annotation>
+			<xs:documentation>Kan betragtes som en LetterType, som blot begrænses til VersionCode=U2540U og TypeCode=RUC25</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Identifier" type="String_1_14"/>
+			<xs:element name="VersionCode">
+				<xs:simpleType>
+					<xs:restriction base="VersionCodeType">
+						<xs:pattern value="XU2540U"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="StatisticalCode" type="String_1_8"/>
+			<xs:element name="Bundleindentifier" type="String_1_35"/>
+			<xs:element name="Authorisation" type="DateTimeType"/>
+			<xs:element name="TypeCode">
+				<xs:simpleType>
+					<xs:restriction base="TypeCodeType">
+						<xs:pattern value="XRUC25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="StatusCode">
+				<xs:simpleType>
+					<xs:restriction base="StatusCodeType">
+						<xs:pattern value="nytbrev"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	
+	
+	
+	<xs:complexType name="GynecologyInvoiceSenderType">
+		<xs:sequence>
+			<xs:element ref="EANIdentifier"/>
+			<xs:element ref="Identifier"/>
+			<xs:element ref="SpecialityIdentifier"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GynecologyInvoiceRecieverType">
+		<xs:sequence>
+			<xs:element ref="EANIdentifier"/>
+			<xs:element name="CountyIdentifier" type="String_1_35"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	
+	
+</xs:schema>

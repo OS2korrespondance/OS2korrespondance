@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header(datatables = true)}" />
+<body class="top-navigation">
+	<div id="wrapper">
+	    <div id="page-wrapper" class="gray-bg">
+			<div th:replace="~{fragments/topbar :: topbar(page=recipients)}" />
+
+	        <div class="wrapper wrapper-content">
+		        <div class="row">
+		            <div class="col-lg-1">
+		            </div>
+		            <div class="col-lg-10">
+		            	<div class="ibox">
+							<div class="ibox-title">
+								<h5><em class="fa fa-users"></em> &nbsp; Modtagere</h5>
+							</div>
+
+							<div class="ibox-content">
+								<table id="recipients" class="table table-hover col-lg-12">
+			                		<thead>
+										<tr>
+											<th hidden>Modtager skjult</th>
+											<th class="col-lg-2">Kort Navn</th>
+											<th class="col-lg-4">Modtager</th>
+											<th class="col-lg-2">EAN-nummer</th>
+											<th class="col-lg-3">Identifikation</th>
+											<th class="col-lg-1">Handlinger</th>
+										</tr>
+									</thead>
+					                <tbody>
+						                <tr class="recipientRow" th:each="recipient: ${recipients}">
+											<td th:text="${recipient.fullOrganisationName}" hidden></td>
+											<td>
+												<input class="editShortName form-control" maxlength="35" th:value="${recipient.shortOrganisationName}" th:attr="data-ean=${recipient.eanIdentifier}">
+											</td>
+											<td>
+												<input class="editFullName form-control" th:value="${recipient.fullOrganisationName}">
+						                    </td>
+						                    <td class="eanIdentifier" th:text="${recipient.eanIdentifier}"></td>
+						                    <td th:text="${recipient.identifierCode} + ': ' + ${recipient.identifier}"></td>
+											<td><a th:attr="data-ean=${recipient.eanIdentifier}, data-name=${recipient.fullOrganisationName}" onclick="recipientsService.handleDelete(this)"><em class="fa fa-trash" style="color: black;"></em></a></td>
+						                </tr>
+					                </tbody>
+			                	</table>
+								<div class="w-100" style="height: 35px">
+									<button id="addRecipientBtn" type="submit" class="btn btn-w-m btn-primary float-right" onclick="modalService.open()">Tilføj modtager</button>
+								</div>
+							</div>
+						</div>
+		            </div>
+		        </div>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="modal inmodal" id="addRecipientModal" tabindex="-1" role="dialog"  aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content animated fadeIn">
+				<form id="addRecipientForm" onsubmit="modalService.create(); return false;">
+					<div class="modal-header">
+						<h4 class="modal-title">Tilføj modtager</h4>
+					</div>
+
+					<div class="modal-body">
+						<div class="form-group row mt-3">
+							<label for="identifikationType" class="col-lg-4 col-form-label">Identifikationsnummer type</label>
+							<div class="col-lg-8">
+								<select id="identifikationType" class="form-control">
+									<option th:value="${identifierType.name()}" th:text="${#strings.capitalize(identifierType.name())}"
+											th:selected="${identifierType.name() == 'lokationsnummer'}"
+											th:each="identifierType : ${T(dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode).values()}"></option>
+								</select>
+							</div>
+						</div>
+						<div>
+							<div class="form-group row mt-3">
+								<label for="identifikation" class="col-lg-4 col-form-label">Identifikationsnummer</label>
+								<div class="col-lg-8">
+									<input id="identifikation" type="text" class="form-control" placeholder="" disabled>
+								</div>
+							</div>
+						</div>
+						<div>
+							<div class="form-group row mt-3">
+								<label for="ean" class="col-lg-4 col-form-label">Lokationsnummer</label>
+								<div class="col-lg-8">
+									<input id="ean" type="number" class="form-control" placeholder="" required>
+								</div>
+							</div>
+							<div class="form-group row mt-3">
+								<label for="fullName" class="col-lg-4 col-form-label">Afdelingsnavn</label>
+								<div class="col-lg-8">
+									<input id="fullName" type="text" class="form-control" required>
+								</div>
+							</div>
+							<div class="form-group row mt-3">
+								<label for="shortName" class="col-lg-4 col-form-label">Kort Navn</label>
+								<div class="col-lg-8">
+									<input id="shortName" type="text" class="form-control" maxlength="35">
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-white" style="width: 80px;" onclick="modalService.cancel();">Annuller</button>
+						<button type="submit" class="btn btn-primary" style="width: 80px;">Opret</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div th:replace="~{fragments/footer :: scripts(datatables = true)}" />
+	
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		/*[+
+		+]*/
+		
+		var token = $("meta[name='_csrf']").attr("content");
+		var recipientsService, modalService;
+		$(document).ready(function() {
+			recipientsService = new RecipientsService();
+			recipientsService.init();
+			modalService = new ModalService();
+			modalService.init();
+		});
+
+		function ModalService() {
+			this.init = function () {
+				$('#identifikationType').on('change', function() {
+					let identificationInput = $('#identifikation');
+					if (this.value === 'lokationsnummer') {
+						identificationInput.prop('required', false);
+						identificationInput.prop('disabled', true);
+					} else {
+						identificationInput.prop('required', true);
+						identificationInput.prop('disabled', false);
+					}
+				});
+			}
+
+			this.open = function() {
+				$('#addRecipientModal').modal("show");
+			}
+
+			this.cancel = function() {
+				$('#addRecipientModal').modal("hide");
+			}
+
+			this.create = function() {
+				let identifierCode = $('#identifikationType').val();
+				let identifier = $('#identifikation').val();
+				let ean = $('#ean').val();
+				if (identifierCode === 'lokationsnummer') {
+					identifier = ean;
+				}
+				const fullName = $('#fullName').val()
+				const shortName = $('#shortName').val()
+				const request = {
+					'identifierCode': identifierCode,
+					'identifier': identifier,
+					'ean': ean,
+					'fullName': fullName,
+					'shortName': shortName ? shortName : fullName.slice(0,35)
+				};
+				$.ajax({
+					url: "/rest/admin/recipients",
+					type: 'POST',
+					contentType: 'application/json',
+					headers: {
+						'X-CSRF-TOKEN': token
+					},
+					data: JSON.stringify(request),
+					success: function(data, textStatus, jQxhr) {
+						toastr.success("Modtager oprettet!");
+						location.reload();
+					},
+					error: function(jqXHR, textStatus, errorThrown) {
+						switch (jqXHR.status) {
+							case 400:
+								toastr.warning(jqXHR.responseText);
+								break;
+							default:
+								toastr.warning("Teknisk fejl: " + jqXHR.responseText);
+								break;
+						}
+					}
+				});
+			}
+		}
+		
+		function RecipientsService() {
+			
+			this.init = function() {
+				var recipients = $('#recipients').DataTable({
+					"pageLength" : 25,
+					"bLengthChange": false,
+					"responsive" : true,
+					"autoWidth": false,
+					"ordering": false,
+					"language" : {
+						"search" : "Søg",
+						"lengthMenu" : "_MENU_ modtagere per side",
+						"info" : "Viser _START_ til _END_ af _TOTAL_ modtagere",
+						"zeroRecords" : "Ingen data...",
+						"infoEmpty" : "",
+						"infoFiltered" : "(ud af _MAX_ modtagere)",
+						"paginate" : {
+							"previous" : "Forrige",
+							"next" : "Næste"
+						}
+					}
+				});
+
+				$('.editShortName').on('change', function (event) {
+					recipientsService.handleChange($(this));
+				});
+
+				$('.editFullName').on('change', function (event) {
+					recipientsService.handleChange($(this));
+				});
+
+				// assign listeners again on page change
+				$('#recipients').on('draw.dt', function () {
+					$('.editShortName').off('change');
+					$('.editShortName').on('change', function (event) {
+						recipientsService.handleChange($(this));
+					});
+
+					$('.editFullName').off('change');
+					$('.editFullName').on('change', function (event) {
+						recipientsService.handleChange($(this));
+					});
+				});
+			}
+
+			this.handleChange = function(inputElement) {
+				const parentRowElement = inputElement.closest(".recipientRow")[0]
+				const shortName = parentRowElement.querySelector(".editShortName").value
+				const fullName = parentRowElement.querySelector(".editFullName").value
+				const ean = parentRowElement.querySelector(".eanIdentifier").textContent
+				const dataObject = {
+					shortName : shortName,
+					fullName : fullName,
+					ean : ean
+				}
+
+				$.ajax({
+					url: "/rest/admin/recipients/" + ean + "/name",
+					type: 'POST',
+					headers: {
+						'X-CSRF-TOKEN': token
+					},
+					data: JSON.stringify(dataObject),
+					cache: false,
+					contentType: 'application/json',
+					processData: false,
+					success: function(data, textStatus, jQxhr) {
+						toastr.success("Gemt!");
+					},
+					error: function(jqXHR, textStatus, errorThrown) {
+						switch (jqXHR.status) {
+							case 400:
+								toastr.warning(jqXHR.responseText);
+								break;
+							default:
+								toastr.warning("Teknisk fejl: " + jqXHR.responseText);
+								break;
+						}
+					}
+				});
+			}
+
+			this.handleDelete = function (elem) {
+				const ean = elem.dataset.ean;
+				swal({
+					html: true,
+					title : 'Slet ' + elem.dataset.name,
+					text : `Er du sikker på du vil slette modtageren: ` + elem.dataset.name,
+					type : "warning",
+					showCancelButton : true,
+					confirmButtonColor : "#DD6B55",
+					confirmButtonText : 'Ja',
+					cancelButtonText : 'Nej',
+					closeOnConfirm : true,
+					closeOnCancel : true
+				},
+				function (isConfirm) {
+					if (isConfirm) {
+						$.ajax({
+							url: `/rest/admin/recipients/${ean}`,
+							type: 'DELETE',
+							headers: {
+								'X-CSRF-TOKEN': token
+							},
+							success: function(data, textStatus, jQxhr) {
+								toastr.success("Modtager slettet!");
+								location.reload();
+							},
+							error: function(jqXHR, textStatus, errorThrown) {
+								switch (jqXHR.status) {
+									case 400:
+										toastr.warning(jqXHR.responseText);
+										break;
+									default:
+										toastr.warning("Teknisk fejl: " + jqXHR.responseText);
+										break;
+								}
+							}
+						});
+					}
+				});
+			}
+		}
+
+        
+
+		/*]]>*/
+	</script>
+</body>
+</html>
