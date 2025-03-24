@@ -1,72 +1,31 @@
-# Change Log in OS2 projects/products
+# Change Log for OS2korrespondance
 
-All notable changes to the project MUST be documented in this file.
- 
-The format can be based on [Keep a Changelog](http://keepachangelog.com/)
-and the project versioning could adher to [Semantic Versioning](http://semver.org/).
+## [1.2.0] - 2024-12-19
+Release 2025r1
 
-## Guiding Principles
-
-* Changelogs are for humans, not machines.
-* There should be an entry for every single version.
-* The same types of changes should be grouped.
-* Versions and sections should be linkable.
-* The latest version comes first.
-* The release date of each version is displayed.
-* Mention whether you follow Semantic Versioning.
-
-## Types of changes
-
-* Added for new features.
-* Changed for changes in existing functionality.
-* Deprecated for soon-to-be removed features.
-* Removed for now removed features.
-* Fixed for any bug fixes.
-* Security in case of vulnerabilitie 
-
-# Example
-
-## [Unreleased] - yyyy-mm-dd
- 
-Here we write upgrading notes for brands. It's a team effort to make them as
-straightforward as possible.
- 
-### Added
-- [PROJECTNAME-XXXX](http://tickets.projectname.com/browse/PROJECTNAME-XXXX)
-  MINOR Ticket title goes here.
-- [PROJECTNAME-YYYY](http://tickets.projectname.com/browse/PROJECTNAME-YYYY)
-  PATCH Ticket title goes here.
- 
-### Changed
- 
 ### Fixed
- 
-## [1.2.4] - 2017-03-15
-  
-Here we would have the update steps for 1.2.4 for people to follow.
- 
+-[KORRES-19](https://os2web.atlassian.net/browse/KORRES-19)	Lægge kode på GitHub
+-[KORRES-26](https://os2web.atlassian.net/browse/KORRES-26)	Fejlmeddelelse ved log ud
+
 ### Added
- 
-### Changed
-  
-- [PROJECTNAME-ZZZZ](http://tickets.projectname.com/browse/PROJECTNAME-ZZZZ)
-  PATCH Drupal.org is now used for composer.
- 
-### Fixed
- 
-- [PROJECTNAME-TTTT](http://tickets.projectname.com/browse/PROJECTNAME-TTTT)
-  PATCH Add logic to runsheet teaser delete to delete corresponding
-  schedule cards.
- 
-## [1.2.3] - 2017-03-14
- 
+-[KORRES-22](https://os2web.atlassian.net/browse/KORRES-22) CPR opslag
+-[KORRES-27](https://os2web.atlassian.net/browse/KORRES-27) Mailskabeloner
+-[KORRES-28](https://os2web.atlassian.net/browse/KORRES-28) Sortering i mails
+-[KORRES-29](https://os2web.atlassian.net/browse/KORRES-29) Patientens navn/cpr på oversigten
+-[KORRES-30](https://os2web.atlassian.net/browse/KORRES-30) Muligt udviklingsønske: Videresend besked
+-[KORRES-31](https://os2web.atlassian.net/browse/KORRES-31) Send mail: Fjern Patient Status
+-[KORRES-34](https://os2web.atlassian.net/browse/KORRES-34) Gør det muligt at slette mapper
+
+
+## [1.1.0] - 2024-12-19
+Release 2024r1
+
 ### Added
-   
-### Changed
+-[KORRES-20](https://os2web.atlassian.net/browse/KORRES-20) Sendebilledet skal ikke være forudfyldt med "øverste" modtager
+-[KORRES-10](https://os2web.atlassian.net/browse/KORRES-10) Mulighed for dybe links fra andre applikationer
+-[KORRES-15](https://os2web.atlassian.net/browse/KORRES-15) Mulighed for at vedlægge bilag
+-[KORRES-16](https://os2web.atlassian.net/browse/KORRES-16) Navn på modtager
+-[KORRES-23](https://os2web.atlassian.net/browse/KORRES-23) Auditlog ændringer i modtagerlisten
+-[KORRES-14](https://os2web.atlassian.net/browse/KORRES-14) Sletning af logs
+-[KORRES-32](https://os2web.atlassian.net/browse/KORRES-32) Sende internt
  
-### Fixed
- 
-- [PROJECTNAME-UUUU](http://tickets.projectname.com/browse/PROJECTNAME-UUUU)
-  MINOR Fix module foo tests
-- [PROJECTNAME-RRRR](http://tickets.projectname.com/browse/PROJECTNAME-RRRR)
-  MAJOR Module foo's timeline uses the browser timezone for date resolution

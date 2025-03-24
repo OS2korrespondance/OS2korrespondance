@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org"
+	  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head th:replace="~{fragments/header :: header}" />
 <body class="top-navigation">
 	<div id="wrapper">
@@ -14,6 +15,7 @@
 		            <div class="col-lg-9 animated fadeInRight">
 		            	<div class="mail-box-header">
 			                <div class="float-right tooltip-demo">
+			                    <a th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT OR mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED}" th:href="'/mail/' + ${mail.id} + '/forward'" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Videresend besked"><i class="fa fa-share"></i>  Videresend</a>
 			                    <a th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT OR mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED}" th:href="'/mail/' + ${mail.id} + '/answer'" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Svar besked"><i class="fa fa-reply"></i>  Svar</a>
 			                    <button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}"  class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked" onclick="modalService.openMoveModal()" th:attr="data-id=${mail.id}"><i class="fa fa-folder-open"></i></button>
 			                    <button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}"  class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Arkiver besked" onclick="mailService.archive(true)" th:attr="data-id=${mail.id}"><i class="fa fa-archive"></i> </button>
@@ -37,11 +39,24 @@
 								</h5>
 			                </div>
 
-			                <p th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="font-normal" th:if="${mail.senderDepartmentName != null}"><strong>Afsenders afdelingsnavn: </strong><span th:text="${mail.senderDepartmentName}"></span></p>
-			                <p th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="font-normal" th:if="${mail.senderMedicalSpecialityCode != null}"><strong>Afsenders medicinske speciale: </strong><span th:text="${mail.senderMedicalSpecialityCode.displayValue}"></span></p>
+							<th:block th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}">
+								<div class="font-normal" th:if="${mail.senderDepartmentName != null}"><strong>Afsenders afdelingsnavn: </strong><span th:text="${mail.senderDepartmentName}"></span></div>
+								<div class="font-normal" th:if="${mail.sender.getUnitName() != null}"><strong>Afsenders enhed: </strong><span th:text="${mail.sender.getUnitName()}"></span></div>
+								<div class="font-normal" th:if="${mail.senderMedicalSpecialityCode != null}"><strong>Afsenders medicinske speciale: </strong><span th:text="${mail.senderMedicalSpecialityCode.displayValue}"></span></div>
+                                <div class="font-normal" th:if="${mail.sender.phoneNumber != null}"><strong>Afsenders telefon: </strong><span th:text="${mail.sender.phoneNumber}"></span></div>
+								<div class="font-normal" th:if="${mail.senderDepartmentName != null}"><strong>Afsenders adresse: </strong></div>
+								<th:block>
+
+									<div class="font-normal" th:if="${mail.sender.getStreetName() != null}"><span th:text="${mail.sender.getStreetName()}"></span></div>
+									<p>
+										<span class="font-normal" th:if="${mail.sender.getPostcodeIdentifier() != null}"><span th:text="${mail.sender.getPostcodeIdentifier()}"></span></span>
+										<span class="font-normal" th:if="${mail.sender.getDistrictName() != null}"><span th:text="${mail.sender.getDistrictName()}"></span></span>
+									</p>
+								</th:block>
+							</th:block>
 			                <p th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT && mail.receivedNegativeReceipt}"><span class="label label-danger">Negativ kvittering</span> <strong>Afvisningsgrund:</strong> <span th:if="${mail.negativeReceiptReason != null}" th:text="${mail.negativeReceiptReason}"></span></p>
 			                <p>
-			                	<strong>Patient:</strong> 
+			                	<strong>Patient:</strong>
 			                	<span th:text="${mail.patient.name} + ' (' + ${mail.patient.cpr} + ' - ' + ${mail.patient.episodeOfCareStatusCode.displayValue} + ')'"></span>
 			                	<span th:if="${mail.patient.streetName != null}" th:text="'- ' + ${mail.patient.streetName}"></span>
 			                	<span th:if="${mail.patient.suburbName != null}" th:text="', ' + ${mail.patient.suburbName}"></span>
@@ -50,7 +65,7 @@
 			                </p>
 			            	<p th:if="${mail.highPriority}"><span class="label label-primary">Høj prioritet</span></p>
 			            </div>
-			            
+
 		                <div class="mail-box">
 			                <pre class="mail-body" style="border: 0px; background: #FAFAFA;" th:utext="${content}"></pre>
 		                    <div class="mail-attachment" th:if="${mail.references!=null and !mail.references.empty}">
@@ -59,19 +74,21 @@
 										<p>Vi har endnu ikke modtaget de vedhæftede filer.</p>
 									</div>
 		                            <span><i class="fa fa-paperclip"></i><span th:text="' ' + ${#lists.size(mail.references)} + (${#lists.size(mail.references)} == 1 ? ' fil' : ' filer')"></span></span>
-		                        	<span th:if="${mail.getBinaryMessage() != null}">
-										- <a th:href="'/rest/mails/' + ${mail.id} + '/download'">Download alle filer</a>
-									</span>
 		                        </p>
 		                        <div class="attachment">
 		                            <div class="file-box" th:each="attachment : ${mail.references}">
-		                                <div class="file" th:if="${T(dk.digitalidentity.medcommailbox.dao.model.enums.ReferenceType).BIN == attachment.referenceType}">
-		                                    <a th:href="'/rest/mails/' + ${mail.id} + '/attachments/' + ${attachment.id} + '/download'">
+		                                <div class="file" th:if="${T(dk.digitalidentity.medcommailbox.dao.model.enums.ReferenceType).BIN == attachment.referenceType}"
+											 th:with="contentType=${T(dk.digitalidentity.medcommailbox.util.MedcomContentType).contentTypeFor(attachment.getObjectExtensionCode())}">
+		                                    <a th:attr="data-attachmentid=${attachment.id},data-contenttype=${contentType}" onclick="mailService.download(this)" >
 		                                        <span class="corner"></span>
-		                                        <div class="icon">
-		                                            <i class="fa fa-file"></i>
+		                                        <div class="icon" th:switch="${attachment.getObjectExtensionCode()}">
+		                                            <i class="fa fa-image" th:case="'jpeg'"></i>
+		                                            <i class="fa fa-image" th:case="'png'"></i>
+		                                            <i class="fa fa-image" th:case="'gif'"></i>
+		                                            <i class="fa fa-file-pdf-o" th:case="'pdf'"></i>
+													<i class="fa fa-file" th:case="*"></i>
 		                                        </div>
-		                                        <div class="file-name" th:text="${attachment.filename}" style="word-wrap: break-word !important; white-space: normal !important"></div>
+		                                        <div class="file-name" th:text="${@binaryService.getReferenceFilename(attachment)} + ' (' + ${T(dk.digitalidentity.medcommailbox.util.ThymeleafFormatters).readableFileSize(attachment.getObjectOriginalSize()) + ')'}" style="word-wrap: break-word !important; white-space: normal !important"></div>
 		                                    </a>
 		                                </div>
 		                                <div class="file" th:if="${T(dk.digitalidentity.medcommailbox.dao.model.enums.ReferenceType).SUP == attachment.referenceType}">
@@ -172,7 +189,7 @@
 	</div>
 
 	<div th:replace="~{fragments/footer :: scripts}" />
-	
+
 	<script th:inline="javascript">
 		/*<![CDATA[*/
 		/*[+
@@ -180,7 +197,7 @@
 			var daysBeforeDeletion = [[${daysBeforeDeletion}]];
 			const createFolderId = [[${T(dk.digitalidentity.medcommailbox.Constants).FOLDER_CREATE_ID}]]
 		+]*/
-		
+
 		var token = $("meta[name='_csrf']").attr("content");
 		var mailService, modalService;
 		$(document).ready(function() {
@@ -239,13 +256,41 @@
 				$('#moveMailModal').modal("hide");
 			}
 		}
-		
+
 		function MailService() {
-			
+
+			this.download = function(elem) {
+				const attachmentId = elem.dataset.attachmentid;
+				const contenttype = elem.dataset.contenttype;
+				let text = "Den vedhæftede fil åbner i et nyt vindue";
+				let icon = "info";
+				if (contenttype === "application/octet-stream") {
+					text = "Filen downloades til din computer, det er dit ansvar at slette filen efter brug!"
+					icon = "warning";
+				}
+				swal({
+					html: true,
+					title : "Fil download",
+					text : text,
+					type : icon,
+					showCancelButton : true,
+					confirmButtonColor : "#DD6B55",
+					confirmButtonText : 'Fortsæt',
+					cancelButtonText : 'Annuller',
+					closeOnConfirm : true,
+					closeOnCancel : true
+				},
+				(isConfirm) => {
+					if (isConfirm) {
+						window.open(`/attachments/${mailId}/attachments/${attachmentId}`, '_blank').focus();
+					}
+				});
+			}
+
 			this.archive = function(archive) {
 				var title = "";
 				var text = "";
-				
+
 				if (archive) {
 					title = 'Arkiver besked';
 					text = 'Er du sikker på at du vil arkivere denne besked?<br/>Du vil fremover kunne finde den under arkiv mappen.';
@@ -253,7 +298,7 @@
 					title = 'Flyt besked til indbakken';
 					text = 'Er du sikker på at du vil flytte denne besked til indbakken?<br/>Du vil fremover kunne finde den under indbakke mappen.';
 				}
-				
+
 				swal({
                     html: true,
                     title : title,
@@ -274,23 +319,23 @@
      	    			      'X-CSRF-TOKEN': token
      	    			   },
      	    			   type: 'post',
-     	    			   
+
      	    			   success: function(data, textStatus, jQxhr) {
 								if (archive) {
 									toastr.success("Beskeden er arkiveret!");
 								} else {
 									toastr.success("Beskeden er flyttet til indbakken!");
 								}
-								
+
 								setTimeout(() => {window.location.href="/mailbox/INBOX"}, 2000);
      	    			   },
      	    			   error: function(jQxhr, textStatus, errorThrown) {
      	    				  	if (archive) {
-     	    				  		toastr.error("Fejl! Kunne ikke arkivere besked.");	
+     	    				  		toastr.error("Fejl! Kunne ikke arkivere besked.");
 								} else {
-									toastr.error("Fejl! Kunne ikke flytte beskeden til indbakken.");	
+									toastr.error("Fejl! Kunne ikke flytte beskeden til indbakken.");
 								}
-     	    							    				      
+
      	    			   }
      	    			});
                     }
@@ -353,7 +398,7 @@
 			}
 		}
 
-        
+
 
 		/*]]>*/
 	</script>

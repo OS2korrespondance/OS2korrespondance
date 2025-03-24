@@ -92,7 +92,7 @@
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>
 			<artifactId>saml-module</artifactId>
-			<version>4.0.11</version>
+			<version>4.1.0</version>
 		</dependency>
 
 		<dependency>
@@ -192,6 +192,11 @@
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+			<version>1.10.0</version>
 		</dependency>
 	</dependencies>
 

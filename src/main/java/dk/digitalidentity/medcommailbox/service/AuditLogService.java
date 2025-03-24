@@ -3,6 +3,8 @@ package dk.digitalidentity.medcommailbox.service;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAmount;
 
+import dk.digitalidentity.medcommailbox.dao.model.Recipient;
+import dk.digitalidentity.medcommailbox.dao.model.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,6 +71,29 @@ public class AuditLogService {
 		LocalDateTime deleteBeforeDate = dateNow.minus(amount);
 
 		auditLogDao.deleteByTimestampBefore(deleteBeforeDate);
-		
+	}
+
+	public String getDetails(final Recipient recipient) {
+		StringBuilder details = new StringBuilder();
+		details.append("FullOrganizationName: " + recipient.getFullOrganisationName());
+		details.append("\r\n");
+		details.append("ShortOrganizationName: " + recipient.getShortOrganisationName());
+		details.append("\r\n");
+		details.append("Identifier: " + recipient.getIdentifier());
+		details.append("\r\n");
+		details.append("IdentifierCode: " + recipient.getIdentifierCode());
+		details.append("\r\n");
+		details.append("Ean: " + recipient.getEanIdentifier());
+		return details.toString();
+	}
+
+	public String getDetails(final Reference reference, final String filename) {
+		StringBuilder details = new StringBuilder();
+		details.append("Filnavn: " + filename);
+		details.append("\r\n");
+		details.append("FilId: " + reference.getId());
+		details.append("\r\n");
+		details.append("Mail: " + reference.getMail().getSubject());
+		return details.toString();
 	}
 }

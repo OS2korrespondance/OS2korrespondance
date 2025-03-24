@@ -38,5 +38,22 @@ public class Recipient {
 
 	@Column
 	private String fullOrganisationName;
-	
+
+	@Column
+	private String departmentName;
+
+	@Column
+	private String unitName;
+
+	@Column
+	private String streetName;
+
+	@Column
+	private String districtName;
+
+	@Column
+	private String postcodeIdentifier;
+
+	@Column
+	private String phoneNumber;
 }

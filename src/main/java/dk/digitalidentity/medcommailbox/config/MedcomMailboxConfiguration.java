@@ -1,5 +1,6 @@
 package dk.digitalidentity.medcommailbox.config;
 
+import dk.digitalidentity.medcommailbox.config.properties.Cpr;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -25,4 +26,5 @@ public class MedcomMailboxConfiguration {
 	private boolean allowAttachments = false;
 	private boolean createArchives = true;
 	private String s3EncryptionKey = null;
+	private Cpr cpr = new Cpr();
 }

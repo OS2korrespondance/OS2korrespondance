@@ -1,12 +1,15 @@
 package dk.digitalidentity.medcommailbox.service;
 
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
+import dk.digitalidentity.medcommailbox.dao.model.Binary;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
+import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -77,6 +80,19 @@ public class S3Service {
 						.build(),
 				createBody(file));
 		return key;
+	}
+
+	/**
+	 * @throws ResponseStatusException if an error happens during download
+	 */
+	public byte[] downloadFromS3(Binary binary) {
+		byte[] fileContent;
+		try {
+			fileContent = downloadBytes(binary.getS3FileKey());
+		} catch (IOException e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+		return fileContent;
 	}
 	
 	@SneakyThrows
