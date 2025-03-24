@@ -1,12 +1,7 @@
-# OS2projekt
+# OS2korrespondance
 
-This is a template repository describing best practice when creating Open Source projects in OS2.
+Med OS2korrespondance kan kommunale afdelinger kommunikere med sundhedsvæsenet via den eksisterende it-infrastruktur på sundhedsområdet (MedCom). 
 
-The readme file must contain a description of the project and references to other documents in the project.
+OS2korrespondance er en selvstændig webbaseret applikation, der kan styrke kommunikationen i tværsektorielt samarbejde. Også selvom jeres øvrige arbejde foregår i lukkede fagsystemer.
 
-## Inspired by
-
-Example content is inspired by other projects:
-
-* [The Standard for Public Code](https://standard.publiccode.net/)
-* [Open Zaak](https://github.com/open-zaak/)
+Se mere på [OS2korrespondances OS2 side](https://www.os2.eu/os2korrespondance) 
