@@ -130,7 +130,7 @@ public class EmessageMapper {
         binaryLetter.setSender(createSenderBinary(configSender));
         binaryLetter.setLetter(createLetterBinary(now, dateFormatterTime));
         binaryLetter.setReceiver(createReceiver(binaryMessage));
-        binaryLetter.setSystemInformation(false);
+        binaryLetter.setSystemInformation(null);
         binaryLetter.setPatient(createPatient(binaryMessage));
         binaryMessage.getBinaries().forEach(b -> {
             try {
@@ -191,6 +191,12 @@ public class EmessageMapper {
                     break;
                 }
             }
+            if (bin.getObjectExtensionCode() == null && (StringUtils.endsWithIgnoreCase(mailRef.getFilename(), "jpg"))) {
+                bin.setObjectExtensionCode(ObjectExtensionCodeType.JPEG);
+            }
+            if (bin.getObjectExtensionCode() == null && (StringUtils.endsWithIgnoreCase(mailRef.getFilename(), "tif"))) {
+                bin.setObjectExtensionCode(ObjectExtensionCodeType.TIFF);
+            }
             final ObjectCodeType code = switch (bin.getObjectExtensionCode()) {
                 case PCX, TIFF, JPEG, GIF, BMP, PNG, DCM -> ObjectCodeType.BILLEDE;
                 case MPG, WAV, AVI, MID, RMI, INH, BIN -> ObjectCodeType.MULTIMEDIE;
@@ -217,7 +223,7 @@ public class EmessageMapper {
         final dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage eMessage = new dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage();
         eMessage.setEnvelope(createEnvelopeType2005(now));
 
-        final PositiveReceipt positiveReceipt = createPositiveRecipt2005(clinicalEmail.getSender().getEANIdentifier(), clinicalEmail.getReceiver().getEANIdentifier());
+        final PositiveReceipt positiveReceipt = createPositiveRecipt2005(clinicalEmail.getReceiver().getEANIdentifier(), clinicalEmail.getSender().getEANIdentifier());
         final PositiveReceipt.OriginalEmessage originalEmessage = createPositiveOriginalClinicalEmessage(orgEMessage);
         final PositiveReceipt.OriginalEmessage.OriginalLetter originalLetter = createPositiveOrginalLetter(clinicalEmail);
         originalEmessage.getOriginalLetters().add(originalLetter);
@@ -231,7 +237,7 @@ public class EmessageMapper {
         final dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage eMessage = new dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage();
         eMessage.setEnvelope(createEnvelopeType2005(now));
 
-        final PositiveReceipt positiveReceipt = createPositiveRecipt2005(binaryLetter.getSender().getIdentifier(), binaryLetter.getReceiver().getEANIdentifier());
+        final PositiveReceipt positiveReceipt = createPositiveRecipt2005(binaryLetter.getReceiver().getIdentifier(), binaryLetter.getSender().getEANIdentifier());
         final PositiveReceipt.OriginalEmessage originalEmessage = createPositiveOriginalBinaryEmessage(orgEMessage);
         final PositiveReceipt.OriginalEmessage.OriginalLetter originalLetter = createPositiveOrginalLetter(binaryLetter);
         originalEmessage.getOriginalLetters().add(originalLetter);
@@ -250,7 +256,7 @@ public class EmessageMapper {
         final dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage eMessage = new dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage();
         eMessage.setEnvelope(createNegativeEnvelope(now, dateFormatterTime));
 
-        final NegativeReceipt negativeReceipt = createNegativeReceipt2005(binaryLetter.getSender().getEANIdentifier(), binaryLetter.getReceiver().getEANIdentifier());
+        final NegativeReceipt negativeReceipt = createNegativeReceipt2005(binaryLetter.getReceiver().getEANIdentifier(), binaryLetter.getSender().getEANIdentifier());
         final NegativeReceipt.OriginalEmessage.OriginalLetter originalLetter = createNegativeOriginalLetter(
                 binaryLetter.getLetter().getIdentifier(), nullSafe(() -> binaryLetter.getLetter().getVersionCode().value(), null), refuseText, refuseCode);
         final NegativeReceipt.OriginalEmessage originalEmessage = createNegativeOriginalMessage(
@@ -272,7 +278,7 @@ public class EmessageMapper {
         final dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage eMessage = new dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage();
         eMessage.setEnvelope(createNegativeEnvelope(now, dateFormatterTime));
 
-        final NegativeReceipt negativeReceipt = createNegativeReceipt2005(clinicalEmail.getSender().getEANIdentifier(), clinicalEmail.getReceiver().getEANIdentifier());
+        final NegativeReceipt negativeReceipt = createNegativeReceipt2005(clinicalEmail.getReceiver().getEANIdentifier(), clinicalEmail.getSender().getEANIdentifier());
         final NegativeReceipt.OriginalEmessage.OriginalLetter originalLetter = createNegativeOriginalLetter(clinicalEmail.getLetter().getIdentifier(),
                 clinicalEmail.getLetter().getVersionCode().value(), refuseText, refuseCode);
         final NegativeReceipt.OriginalEmessage originalEmessage = createNegativeOriginalMessage(
@@ -494,7 +500,7 @@ public class EmessageMapper {
         BinaryLetterLetterType letter = new BinaryLetterLetterType();
         letter.setIdentifier(RandomStringUtils.randomAlphanumeric(14));
         letter.setVersionCode(dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.VersionCodeType.XB_0131_X);
-        letter.setStatisticalCode("XB0131X");
+        letter.setStatisticalCode("XBIN01");
         dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.DateTimeType authorisation = new dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.DateTimeType();
         authorisation.setDate(now.toLocalDate());
         authorisation.setTime(now.format(dateFormatterTime));

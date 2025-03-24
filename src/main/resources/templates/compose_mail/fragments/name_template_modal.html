@@ -1,0 +1,24 @@
+<th:block th:fragment="saveTemplateModal" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+    <div id="saveTemplateModal" class="modal fade bd-example-modal-lg" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4>Navngiv skabelon</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-content">
+                        <input id="templateNameInput" class="form-control" type="text" placeholder="Skabelon Navn" />
+                        <p id="templateNameError" class="invisible text-danger" >En skabelon skal have et navn på mindst 3 karakterer</p>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="submitTemplateButton" type="button" class="btn btn-primary" onclick="templateService.onSaveTemplate()">Gem</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Fortryd</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>

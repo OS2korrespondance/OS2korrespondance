@@ -12,10 +12,14 @@ public enum AuditLogOperation {
 	MAIL_DELETE("Besked slettet"),
 	MAIL_UNDELETE("Besked ikke længere slettet"),
 	MAIL_SENT("Besked afsendt"),
-	
+	MAIL_OPEN("Besked åbnet"),
+	ATTACHMENT_DOWNLOAD("Vedhæftet fil hentet"),
+
 	RECIPIENT_CREATED("Modtager oprettet"),
 	RECIPIENT_DELETED("Modtager slettet"),
-	RECIPIENT_CHANGE_NAME("Modtager opdateret");
+	RECIPIENT_CHANGE_NAME("Modtager opdateret"),
+
+	CPR_LOOKUP("CPR opslået");
 	private String message;
 
 	private AuditLogOperation(String message) {

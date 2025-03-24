@@ -33,7 +33,6 @@ public class MedcomSenderService {
     private final EmessageMapper emessageMapper;
     private final S3Service s3Service;
     private final MedcomLogService logService;
-    private final MedcomMailboxConfiguration configuration;
     private final MailService mailService;
 
     @Transactional
@@ -94,9 +93,6 @@ public class MedcomSenderService {
     }
 
     private void archiveMessage(final Mail draft, final Emessage emessage, final String fileName) {
-        if (!configuration.isCreateArchives()) {
-            log.info("Not creating archive, feature disabled");
-        }
         // Add elements that should only be saved in the archive file
         if (isNotEmpty(draft.getCaseId())) {
             emessage.getClinicalEmailsAndLaboratoryAnalysisFilesAndLaboratoryRequests().add(new CaseIdWrapper(draft.getCaseId()));

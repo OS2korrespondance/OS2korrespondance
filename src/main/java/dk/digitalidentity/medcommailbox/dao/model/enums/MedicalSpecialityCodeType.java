@@ -1,7 +1,7 @@
 package dk.digitalidentity.medcommailbox.dao.model.enums;
 
 public enum MedicalSpecialityCodeType {
-	ikkeklassificeret("Blandet medicin (Afsenders sygehusspeciale)"), 
+	ikkeklassificeret("Ikke klassificeret"),
 	intern_medicin_sygehus("Intern medicin (Afsenders sygehusspeciale)"), 
 	geriatri("Geriatri (Afsenders sygehusspeciale)"), 
 	hepatologi("Hepatologi (Afsenders sygehusspeciale)"), 

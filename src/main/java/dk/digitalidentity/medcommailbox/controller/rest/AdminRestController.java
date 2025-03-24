@@ -68,7 +68,7 @@ public class AdminRestController {
 		recipient.setFullOrganisationName(recipientReq.fullName);
 		recipient.setEanIdentifier("" + recipientReq.ean);
 		recipientService.save(recipient);
-		auditLogService.log(AuditLogOperation.RECIPIENT_CREATED, getDetails(recipient));
+		auditLogService.log(AuditLogOperation.RECIPIENT_CREATED, auditLogService.getDetails(recipient));
 		return new ResponseEntity<>(HttpStatus.CREATED);
 	}
 
@@ -84,21 +84,9 @@ public class AdminRestController {
 			return new ResponseEntity<>("Modtageren anvendes, og kan derfor ikke slettes", HttpStatus.BAD_REQUEST);
 		}
 		recipientService.delete(recipient);
-		auditLogService.log(AuditLogOperation.RECIPIENT_DELETED, getDetails(recipient));
+		auditLogService.log(AuditLogOperation.RECIPIENT_DELETED, auditLogService.getDetails(recipient));
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
-	private String getDetails(Recipient recipient) {
-		StringBuilder details = new StringBuilder();
-		details.append("FullOrganizationName: " + recipient.getFullOrganisationName());
-		details.append("\r\n");
-		details.append("ShortOrganizationName: " + recipient.getShortOrganisationName());
-		details.append("\r\n");
-		details.append("Identifier: " + recipient.getIdentifier());
-		details.append("\r\n");
-		details.append("IdentifierCode: " + recipient.getIdentifierCode());
-		details.append("\r\n");
-		details.append("Ean: " + recipient.getEanIdentifier());
-		return details.toString();
-	}
+
 }

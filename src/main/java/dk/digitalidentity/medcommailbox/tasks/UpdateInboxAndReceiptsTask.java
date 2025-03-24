@@ -19,8 +19,8 @@ public class UpdateInboxAndReceiptsTask {
 	
 	@Autowired
 	private MedcomReceiveService receiveService;
-	
-	@Scheduled(fixedDelay = 5 * 60 * 1000)
+
+	@Scheduled(cron = "${medcom-mailbox.update-inbox-task-cron}")
 	public void update() {
 		if (!config.isSchedulingEnabled()) {
 			log.debug("Scheduled jobs are disabled on this instance");

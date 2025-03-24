@@ -2,6 +2,7 @@ package dk.digitalidentity.medcommailbox.service;
 
 import dk.digitalidentity.medcommailbox.dao.InboxFolderDao;
 import dk.digitalidentity.medcommailbox.dao.model.InboxFolder;
+import dk.digitalidentity.medcommailbox.dao.model.Mail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,5 +24,18 @@ public class InboxFolderService {
 
 	public InboxFolder save(InboxFolder inboxFolder) {
 		return inboxFolderDao.save(inboxFolder);
+	}
+
+	/**
+	 * Deletes the folder from the database, setting all of their inboxFolder to null
+	 * @param inboxFolder
+	 */
+	public void delete(InboxFolder inboxFolder) {
+		//move all mails to inbox
+		for (Mail mail : inboxFolder.getMails()) {
+			mail.setInboxFolder(null);
+		}
+
+		inboxFolderDao.delete(inboxFolder);
 	}
 }

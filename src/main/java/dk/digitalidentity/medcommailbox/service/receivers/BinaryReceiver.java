@@ -182,7 +182,7 @@ public class BinaryReceiver implements MedcomReceiver {
     @Override
     public boolean handleReceipt(final ReceiptHandler.ReceiptResult receiptResult) {
         return binaryMessageDao.findBinariesByEnvelopeIdentifierAndLetterIdentifier(receiptResult.getEnvelopeIdentifier(),
-                receiptResult.getLetterIdentifier()).isPresent();
+                receiptResult.getLetterIdentifier(), false).isPresent();
     }
 
     @Override

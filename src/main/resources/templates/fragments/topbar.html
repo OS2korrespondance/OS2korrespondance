@@ -48,9 +48,11 @@
                     <a data-toggle="dropdown" href="#" aria-expanded="true"> <i class="fa fa-user"></i></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a th:href="@{/saml/logout}">
-                                <i class="fa fa-sign-out"></i> &nbsp; Log ud
-                            </a>
+                            <form role="form" th:action="@{/logout}" method="POST" id="logoutForm">
+                                <a onclick="document.forms['logoutForm'].submit()" type="submit">
+                                    <i class="fa fa-sign-out"></i> &nbsp; Log ud
+                                </a>
+                            </form>
                         </li>
                     </ul>
                 </li>

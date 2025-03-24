@@ -12,6 +12,7 @@ import dk.digitalidentity.medcommailbox.dao.model.enums.Folder;
 import dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType;
 import dk.digitalidentity.medcommailbox.dao.model.enums.Status;
 import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
+import dk.digitalidentity.medcommailbox.service.BinaryService;
 import dk.digitalidentity.medcommailbox.service.FailedS3KeyService;
 import dk.digitalidentity.medcommailbox.service.MailService;
 import dk.digitalidentity.medcommailbox.service.MedcomLogService;
@@ -19,7 +20,6 @@ import dk.digitalidentity.medcommailbox.service.ReceiptHandler;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
 import dk.digitalidentity.medcommailbox.service.S3Service;
 import dk.digitalidentity.medcommailbox.service.receivers.exceptions.UnknownReceiverException;
-import dk.digitalidentity.medcommailbox.util.EmessageUtil;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2006._07._01.AcknowledgementCodeType;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2006._07._01.ClinicalEmail;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2006._07._01.ClinicalInformationNotSignedType;
@@ -64,6 +64,8 @@ public class MailReceiver implements MedcomReceiver {
     private Marshaller marshaller2005;
     @Autowired
     private MedcomMailboxConfiguration config;
+    @Autowired
+    private BinaryService binaryService;
 
     @Override
     public boolean isHandled(final String s3Key) {
@@ -143,6 +145,12 @@ public class MailReceiver implements MedcomReceiver {
             sender.setFullOrganisationName(clinicalEmail.getSender().getOrganisationName());
             sender = recipientService.save(sender);
         }
+        sender.setDepartmentName(clinicalEmail.getSender().getDepartmentName());
+        sender.setUnitName(clinicalEmail.getSender().getUnitName());
+        sender.setStreetName(clinicalEmail.getSender().getStreetName());
+        sender.setDistrictName(clinicalEmail.getSender().getDistrictName());
+        sender.setPostcodeIdentifier(clinicalEmail.getSender().getPostCodeIdentifier());
+        sender.setPhoneNumber(clinicalEmail.getSender().getTelephoneSubscriberIdentifier());
         mail.setSender(sender);
         mail.setSubject(clinicalEmail.getAdditionalInformation() != null && clinicalEmail.getAdditionalInformation().getSubject() != null ? clinicalEmail.getAdditionalInformation().getSubject() : "Intet emne");
 
@@ -177,12 +185,15 @@ public class MailReceiver implements MedcomReceiver {
                     final Reference reference = fromMedcom(ref);
                     reference.setMail(mail);
                     mail.getReferences().add(reference);
+                    // Set binaryMessage in case it was already recevied
+                    binaryService.findByIdentifier(reference.getObjectIdentifier())
+                            .ifPresent(b -> mail.setBinaryMessage(b.getMessage()));
                 });
 
         final Mail savedMail = mailService.save(mail);
 
         String[] fileNameSplit = s3Key.split("/");
-        String fileName = fileNameSplit[fileNameSplit.length - 1].replace(".xml", "");
+        String fileName = fileNameSplit[fileNameSplit.length - 1].replace(".xml", "").replace(".encrypted", "");
         mailService.toArchive(savedMail, fileName, medcomXml.getFileContents());
 
         MedcomLog log = new MedcomLog();
@@ -219,11 +230,16 @@ public class MailReceiver implements MedcomReceiver {
     @Override
     @Transactional
     public boolean handleReceipt(final ReceiptHandler.ReceiptResult receiptResult) {
-        final Mail mail = mailService.findByEnvelopeIdentifierAndLetterIdentifier(receiptResult.getEnvelopeIdentifier(), receiptResult.getLetterIdentifier());
-        if (mail != null) {
-            mail.setReceivedNegativeReceipt(receiptResult.getReceiptType() != ReceiptType.POSITIVE);
-            mailService.save(mail);
-            return true;
+        try {
+            final Mail mail = mailService.findIncomingByEnvelopeIdentifierAndLetterIdentifier(
+                    receiptResult.getEnvelopeIdentifier(), receiptResult.getLetterIdentifier(), false);
+            if (mail != null) {
+                mail.setReceivedNegativeReceipt(receiptResult.getReceiptType() != ReceiptType.POSITIVE);
+                mailService.save(mail);
+                return true;
+            }
+        } catch (final Exception e) {
+            log.error("Failed to handle receipt {}", e.getMessage(), e);
         }
         return false;
     }
