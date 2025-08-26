@@ -16,6 +16,7 @@ import dk.digitalidentity.medcommailbox.service.MessageTemplateService;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
 import dk.digitalidentity.medcommailbox.session.LandingInfo;
 import dk.digitalidentity.medcommailbox.session.UserSession;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -60,13 +62,9 @@ public class MailController {
 	private MessageTemplateService messageTemplateService;
 
 	@GetMapping("/mailbox/{folder}")
-	public String getMailbox(Model model, @PathVariable Folder folder, @RequestParam(name = "folder", required = false) Long inboxFolderId) {
-		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName());
-		if (constraints == null) {
-			return "redirect:/error";
-		}
+	public String getMailbox(Model model, @PathVariable Folder folder, @RequestParam(name = "folder", required = false) Long inboxFolderId, HttpSession httpSession) {
+		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
 
-//		List<Mail> mails = mailService.getByFolder(folder);
 		InboxFolder inboxFolder = null;
 		if (folder.equals(Folder.INBOX)) {
 			if (inboxFolderId != null) {
@@ -74,9 +72,28 @@ public class MailController {
 			}
 		}
 
-		model.addAttribute("inboxUnreadCount", mailService.getCountByReadAndFolder(false, Folder.INBOX));
-		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT));
-		model.addAttribute("folderCount", mailService.getCountByFolderAndNotDraft(folder));
+		// When user just logged in and has no inbox selected
+		String defaultInbox = (String) httpSession.getAttribute("selectedInbox");
+		if (defaultInbox == null && !constraints.isEmpty()) {
+			String firstConstraint = constraints.iterator().next();
+			httpSession.setAttribute("selectedInbox", firstConstraint);
+			defaultInbox = firstConstraint;
+		}
+		
+		//limit mails to the selected inbox
+		if (defaultInbox != null && !constraints.isEmpty()) {
+			// remove all except selected constraint
+			for (Iterator<String> iterator = constraints.iterator(); iterator.hasNext();) {
+				String constraint = iterator.next();
+				if (!constraint.equals(defaultInbox)) {
+					iterator.remove();
+				}
+			}
+		}
+
+		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
+		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT, constraints));
+		model.addAttribute("folderCount", mailService.getCountByFolderAndNotDraft(folder, inboxFolder, constraints));
 		model.addAttribute("folder", folder);
 		model.addAttribute("inboxFolder", inboxFolder);
 		model.addAttribute("inboxFolders", inboxFolderService.findAll());
@@ -86,6 +103,7 @@ public class MailController {
 
 	@GetMapping("/mail/{id}")
 	public String getMail(Model model, @PathVariable long id) {
+		final Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
 		Mail mail = mailService.getById(id);
 		if (mail == null) {
 			return "redirect:/mailbox/INBOX";
@@ -96,7 +114,7 @@ public class MailController {
 			mail = mailService.save(mail);
 		}
 
-		model.addAttribute("inboxUnreadCount", mailService.getCountByReadAndFolder(false, Folder.INBOX));
+		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
 		model.addAttribute("mail", mail);
 		model.addAttribute("content", mail.getContent().replace("\n", "<br/>"));
 		model.addAttribute("daysBeforeDeletion", configuration.getDaysBeforeDeletion());
@@ -114,10 +132,7 @@ public class MailController {
 
 	@GetMapping("/mail/{id}/answer")
 	public String answer(Model model, @PathVariable long id) {
-		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName());
-		if (constraints == null) {
-			return "redirect:/error";
-		}
+		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
 
 		Mail mail = mailService.getById(id);
 		if (mail == null) {
@@ -138,8 +153,8 @@ public class MailController {
 				.toList();
 
 		model.addAttribute("messageTemplates", messageTemplates);
-		model.addAttribute("inboxUnreadCount", mailService.getCountByReadAndFolder(false, Folder.INBOX));
-		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT));
+		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
+		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT, constraints));
 		model.addAttribute("id", newMail.getId());
 		model.addAttribute("answer", true);
 		model.addAttribute("patient", newMail.getPatient());
@@ -153,10 +168,7 @@ public class MailController {
 
 	@GetMapping("/mail/{id}/forward")
 	public String forward(Model model, @PathVariable long id) {
-		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName());
-		if (constraints == null) {
-			return "redirect:/error";
-		}
+		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
 
 		Mail mail = mailService.getById(id);
 		if (mail == null) {
@@ -164,7 +176,7 @@ public class MailController {
 		}
 
 		final List<Sender> senders = configuration.getSenders().stream()
-				.filter(s -> constraints.isEmpty() || constraints.contains(s.getIdentifier()))
+				.filter(s -> constraints.contains(s.getIdentifier()))
 				.toList();
 
 		final List<Recipient> allRecipients = recipientService.getAll();
@@ -195,8 +207,8 @@ public class MailController {
 				.toList();
 
 		model.addAttribute("messageTemplates", messageTemplates);
-		model.addAttribute("inboxUnreadCount", mailService.getCountByReadAndFolder(false, Folder.INBOX));
-		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT));
+		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
+		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT, constraints));
 		model.addAttribute("id", newMail.getId());
 		model.addAttribute("answer", false);
 		model.addAttribute("patient", newMail.getPatient());
@@ -216,10 +228,7 @@ public class MailController {
 
 	@GetMapping("/mail/new")
 	public String newMail(Model model) {
-		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName());
-		if (constraints == null) {
-			return "redirect:/error";
-		}
+		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
 
 		Mail newMail = new Mail();
 		newMail.setDraft(true);
@@ -228,12 +237,12 @@ public class MailController {
 		newMail.setOriginalFolder(Folder.SENT);
 		newMail.setSubject("");
 		newMail.setRead(true);
-		//TODO sæt rigtig status og afsender, når vi ved hvad der skal bruges
+
 		newMail.setStatus(Status.WAITING);
 		newMail = mailService.save(newMail);
 
 		final List<Sender> senders = configuration.getSenders().stream()
-				.filter(s -> constraints.isEmpty() || constraints.contains(s.getIdentifier()))
+				.filter(s -> constraints.contains(s.getIdentifier()))
 				.toList();
 
 		final List<Recipient> allRecipients = recipientService.getAll();
@@ -245,8 +254,8 @@ public class MailController {
 				.toList();
 
 		model.addAttribute("messageTemplates", messageTemplates);
-		model.addAttribute("inboxUnreadCount", mailService.getCountByReadAndFolder(false, Folder.INBOX));
-		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT));
+		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
+		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT, constraints));
 		model.addAttribute("id", newMail.getId());
 		model.addAttribute("answer", false);
 		model.addAttribute("recipients", allRecipients);

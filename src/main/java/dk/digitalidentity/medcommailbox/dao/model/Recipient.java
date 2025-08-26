@@ -1,15 +1,20 @@
 package dk.digitalidentity.medcommailbox.dao.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
-import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
 import lombok.Getter;
 import lombok.Setter;
 

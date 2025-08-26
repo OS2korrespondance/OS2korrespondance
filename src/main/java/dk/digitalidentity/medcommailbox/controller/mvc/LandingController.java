@@ -49,9 +49,8 @@ public class LandingController {
         return "redirect:/error";
     }
 
-
-    record LandingInfoBody(LandingController.LandingArea landingArea, String senderEan, String receiverEan, String patientCpr, String patientName,
-                           String subject, String caseId, String episodeOfCareStatus) {}
+    record LandingInfoBody(LandingController.LandingArea area, String sender_ean, String receiver_ean, String patient_cpr, String patient_name,
+                           String subject, String case_id, String episode_of_care_status) {}
     /**
      * This method will redirect the post request to a GET request on a secured endpoint, this ensures that parameters
      * are not lost when the user needs to login
@@ -59,25 +58,25 @@ public class LandingController {
     @PostMapping(value = "/landing/form")
     public RedirectView landingPost(@SuppressWarnings("ClassEscapesDefinedScope") final LandingInfoBody body,
                                     final RedirectAttributes redirectAttributes) {
-        if (body.landingArea == LandingController.LandingArea.send_message) {
-            redirectAttributes.addAttribute("area", body.landingArea);
-            if (body.caseId != null) {
-                redirectAttributes.addAttribute("case_id", body.caseId);
+        if (body.area == LandingController.LandingArea.send_message) {
+            redirectAttributes.addAttribute("area", body.area);
+            if (body.case_id != null) {
+                redirectAttributes.addAttribute("case_id", body.case_id);
             }
-            if (body.patientName != null) {
-                redirectAttributes.addAttribute("patient_name", body.patientName);
+            if (body.patient_name != null) {
+                redirectAttributes.addAttribute("patient_name", body.patient_name);
             }
-            if (body.episodeOfCareStatus != null) {
-                redirectAttributes.addAttribute("status", body.episodeOfCareStatus);
+            if (body.episode_of_care_status != null) {
+                redirectAttributes.addAttribute("status", body.episode_of_care_status);
             }
-            if (body.patientCpr != null) {
-                redirectAttributes.addAttribute("patient_cpr", body.patientCpr);
+            if (body.patient_cpr != null) {
+                redirectAttributes.addAttribute("patient_cpr", body.patient_cpr);
             }
-            if (body.receiverEan != null) {
-                redirectAttributes.addAttribute("receiver_ean", body.receiverEan);
+            if (body.receiver_ean != null) {
+                redirectAttributes.addAttribute("receiver_ean", body.receiver_ean);
             }
-            if (body.senderEan != null) {
-                redirectAttributes.addAttribute("sender_ean", body.senderEan);
+            if (body.sender_ean != null) {
+                redirectAttributes.addAttribute("sender_ean", body.sender_ean);
             }
             if (body.subject != null) {
                 redirectAttributes.addAttribute("subject", body.subject);

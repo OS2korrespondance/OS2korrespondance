@@ -33,6 +33,7 @@ import jakarta.xml.bind.Marshaller;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
@@ -69,6 +70,8 @@ public class BinaryReceiver implements MedcomReceiver {
     private S3Service s3Service;
     @Autowired
     private MailDao mailDao;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public boolean isHandled(final String filekey) {

@@ -1,15 +1,21 @@
 package dk.digitalidentity.medcommailbox.controller.rest;
 
+import dk.digitalidentity.medcommailbox.dao.model.Inbox;
+import dk.digitalidentity.medcommailbox.dao.model.InboxSubscriber;
 import dk.digitalidentity.medcommailbox.dao.model.Recipient;
 import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
 import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
 import dk.digitalidentity.medcommailbox.security.RequireAdminAccess;
 import dk.digitalidentity.medcommailbox.service.AuditLogService;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
+import dk.digitalidentity.medcommailbox.service.InboxSubscriberService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
 @SuppressWarnings("ClassEscapesDefinedScope")
 @RequireAdminAccess
 @RestController
@@ -29,6 +37,8 @@ public class AdminRestController {
 	private RecipientService recipientService;
 	@Autowired
 	private AuditLogService auditLogService;
+	@Autowired
+	private InboxSubscriberService subscriberService;
 
 	record SetRecipientInput(@NotNull String shortName, @NotNull String fullName, @NotNull String ean){}
 	@ResponseBody
@@ -61,6 +71,11 @@ public class AdminRestController {
 	@ResponseBody
 	@PostMapping("/rest/admin/recipients")
 	public ResponseEntity<?> setRecipientName(@Valid @RequestBody AddRecipient recipientReq) {
+		Optional<Recipient> recipientOpt = recipientService.findByEanIdentifier(recipientReq.ean + "");
+		if (recipientOpt.isPresent()) {
+			return new ResponseEntity<>("Modtager med samme EAN-nummer findes allerede.", HttpStatus.BAD_REQUEST);
+		}
+		
 		final Recipient recipient = new Recipient();
 		recipient.setIdentifier(recipientReq.identifier);
 		recipient.setIdentifierCode(recipientReq.identifierCode);
@@ -88,5 +103,30 @@ public class AdminRestController {
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
+	record SubscriberForm(@NotNull String inboxEan, @NotEmpty String email) {}
+	@ResponseBody
+	@PostMapping("/rest/admin/settings/addSubscriber")
+	public ResponseEntity<?> addSubscriber(@Valid @RequestBody SubscriberForm form) {
+		subscriberService.addSubscriber(form.inboxEan, form.email);
+		return new ResponseEntity<>(HttpStatus.CREATED);
+	}
+
+	@ResponseBody
+	@PostMapping("/rest/admin/settings/removeSubscriber")
+	public ResponseEntity<?> removeSubscriber(@Valid @RequestBody SubscriberForm form) {
+		subscriberService.removeSubscriber(form.inboxEan, form.email);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	record NegativeReceiptNotifyForm(@NotNull String inboxEan, @NotEmpty boolean value) {}
+
+    @Transactional
+	@ResponseBody
+	@PostMapping("/rest/admin/settings/setNegativeReceiptNotification")
+	public ResponseEntity<?> setNegativeReceiptNotification(@Valid @RequestBody NegativeReceiptNotifyForm form) {
+        Inbox inbox = subscriberService.getOrCreateInbox(form.inboxEan);
+        inbox.setNegativeReceiptNotification(form.value);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
 
 }

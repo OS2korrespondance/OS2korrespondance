@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header(datatables = true, checkbox = true)}" />
+<body class="top-navigation">
+    <div id="wrapper">
+        <div id="page-wrapper" class="gray-bg">
+            <div th:replace="~{fragments/topbar :: topbar(page=settings)}"></div>
+
+            <div class="wrapper wrapper-content">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="col-lg-10">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5>
+                                    <em class="fa fa-users"></em> &nbsp; E-mail notifikationer
+                                </h5>
+                            </div>
+
+                            <div id="emailConfiguration" class="ibox-content">
+                            
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .table > thead > tr:first-child > th,
+        .table > tbody > tr:first-child > th,
+        .table > tfoot > tr:first-child > th,
+        .table > thead > tr:first-child > td,
+        .table > tbody > tr:first-child > td,
+        .table > tfoot > tr:first-child > td {
+          border-top: none;
+        }
+
+        .table > tbody > tr > th:last-child,
+        .table > tbody > tr > td:last-child,
+        .table > tfoot > tr > th:last-child,
+        .table > tfoot > tr > td:last-child {
+          padding-right: 0px;
+        }
+
+        .table > tbody > tr > th:first-child,
+        .table > tbody > tr > td:first-child,
+        .table > tfoot > tr > th:first-child,
+        .table > tfoot > tr > td:first-child {
+          padding-left: 0px;
+        }
+        
+        #recipientsTable .ibox-content {
+            padding: 0;
+        }
+        
+/*         Workaround for medcom-mailbox.css */
+        @media only screen and (max-width: 990px) {
+            table {
+                table-layout: auto !important;
+            }
+            
+            .ibox-content {
+                padding: 0;
+            }
+        }
+
+/*         Checkbox vertical alignment in the column */
+        .icheckbox_square-green {
+/*             vertical-align: -webkit-baseline-middle; */
+        }
+
+    </style>
+    
+    <div th:replace="~{fragments/footer :: scripts(datatables = true, checkbox = true)}" />
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        /*[+
+        +]*/
+
+        var token = $("meta[name='_csrf']").attr("content");
+        $.fn.dataTable.ext.errMode = 'throw'; // or 'console' for log-only
+
+        $(document).ready(function () {
+            loadDataTable();
+        });
+        
+        function loadDataTable() {
+            $('body').getThen('/admin/settings/emailconfig').then((htmlContent) => {
+                $('#emailConfiguration').html($(htmlContent).find("#emailConfiguration"));
+
+                var recipientsTable = $('#recipientsTable').DataTable({
+                    "searching": false,
+                    "ordering": false,
+                    "pageLength" : 10,
+                    "bLengthChange": false,
+                    "responsive" : true,
+                    "autoWidth": false,
+                    "columnDefs": [
+                        { "orderable": false, "searchable": false, "visible": false, "targets": 0 },
+                        { "orderable": false, "searchable": false, "targets": 1 }
+                    ],
+                    "language" : {
+                        "search" : "Søg",
+                        "lengthMenu" : "_MENU_ logs per side",
+                        "info" : "Viser _START_ til _END_ af _TOTAL_ modtagere",
+                        "zeroRecords" : "Ingen data...",
+                        "infoEmpty" : "",
+                        "infoFiltered" : "(ud af _MAX_ logs)",
+                        "paginate" : {
+                            "previous" : "Forrige",
+                            "next" : "Næste"
+                        }
+                    },
+                    stateSave: true,
+                    stateSaveCallback: function (settings, data) {
+                        localStorage.setItem(
+                            'DataTables_' + settings.sInstance,
+                            JSON.stringify(data)
+                        );
+                    },
+                    stateLoadCallback: function (settings) {
+                        return JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance));
+                    }
+                });
+
+                $('#recipientsTable .table').each(function() {
+                    $(this).DataTable({
+                        "searching": false,
+                        "ordering": false,
+                        "pageLength" : 5,
+                        "bLengthChange": false,
+                        "responsive" : true,
+                        "autoWidth": false,
+                        "columnDefs": [
+                            { "orderable": false, "searchable": false, "targets": 0 },
+                            { "orderable": false, "searchable": false, "targets": 1 }
+                        ],
+                        "language" : {
+                            "search" : "Søg",
+                            "lengthMenu" : "_MENU_ logs per side",
+                            "info" : "Viser _START_ til _END_ af _TOTAL_ modtagere",
+                            "zeroRecords" : "Ingen e-mails tilføjet",
+                            "infoEmpty" : "",
+                            "infoFiltered" : "(ud af _MAX_ logs)",
+                            "paginate" : {
+                                "previous" : "Forrige",
+                                "next" : "Næste"
+                            }
+                        }
+                    });
+
+                    $(this).DataTable().on("draw", function() {
+                        $('.i-checks').iCheck({
+                            checkboxClass: 'icheckbox_square-green'
+                        });
+                    });
+                });
+                
+                $('.i-checks').iCheck({
+                    checkboxClass: 'icheckbox_square-green'
+                });
+            });
+        }
+
+        function addSubscriber(elem) {
+            let inboxEan = elem.dataset.inbox;
+            let emails = [];
+            
+            $(elem).parents(".table").find("tbody > tr > td:first-child").each(function () {
+                emails.push($(this).text());
+            });
+            
+            const input = document.getElementById('text-input-' + inboxEan);
+            const error = document.getElementById('email-error-' + inboxEan);
+            const value = input.value.trim();
+            
+            // Reset state
+            input.classList.remove('is-valid', 'is-invalid');
+            error.textContent = '';
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (value === '') {
+              input.classList.add('is-invalid');
+              error.textContent = 'Angiv værdien';
+            } else if (!emailRegex.test(value)) {
+              input.classList.add('is-invalid');
+              error.textContent = 'Ugyldig emailadresse';
+            } else if (emails.includes(value)) {
+                input.classList.add('is-invalid');
+                error.textContent = 'Allerede tildelt';
+            } else {
+              input.classList.add('is-valid');
+
+              $.ajax({
+                  url: "/rest/admin/settings/addSubscriber",
+                  type: 'POST',
+                  headers: {
+                      'X-CSRF-TOKEN': token
+                  },
+                  data: JSON.stringify({
+                      inboxEan: inboxEan,
+                      email: value
+                  }),
+                  cache: false,
+                  contentType: 'application/json',
+                  processData: false,
+                  success: function(data, textStatus, jQxhr) {
+                      toastr.success(value + " tilføjet");
+                      loadDataTable();
+                  },
+                  error: function(response) {
+                      toastr.error("Fejl!");
+                  }
+              });
+            }
+        }
+
+        function removeSubscriber(elem) {
+            let inboxEan = elem.dataset.inbox;
+            let value = elem.dataset.email;
+
+            $.ajax({
+                url: "/rest/admin/settings/removeSubscriber",
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                data: JSON.stringify({
+                    inboxEan: inboxEan,
+                    email: value
+                }),
+                cache: false,
+                contentType: 'application/json',
+                processData: false,
+                success: function(data, textStatus, jQxhr) {
+                    toastr.success(value + " blev fjernet");
+                    loadDataTable();
+                },
+                error: function(response) {
+                    toastr.error("Fejl!");
+                }
+            });
+        }
+
+        function setNegativeReceiptNotification(elem) {
+            let inboxEan = elem.dataset.inbox;
+            let value = $(elem).prop('checked');
+
+            $.ajax({
+                url: "/rest/admin/settings/setNegativeReceiptNotification",
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                data: JSON.stringify({
+                    inboxEan: inboxEan,
+                    value: value
+                }),
+                cache: false,
+                contentType: 'application/json',
+                processData: false,
+                success: function(data, textStatus, jQxhr) {
+                    toastr.success("Opdateret!");
+                },
+                error: function(response) {
+                    toastr.error("Fejl!");
+                }
+            });
+        }
+
+        /*]]>*/
+    </script>
+</body>
+</html>

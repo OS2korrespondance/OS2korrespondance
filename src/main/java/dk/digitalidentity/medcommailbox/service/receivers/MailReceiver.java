@@ -1,5 +1,25 @@
 package dk.digitalidentity.medcommailbox.service.receivers;
 
+import static dk.digitalidentity.medcommailbox.event.Events.NOTIFICATION_QUEUE;
+import static dk.digitalidentity.medcommailbox.mapper.MedcomMapper.fromMedcom;
+import static dk.digitalidentity.medcommailbox.mapper.MedcomMapper.medcomFreeTextToHtml;
+import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getClinicalEmail;
+
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.UUID;
+
+import dk.digitalidentity.medcommailbox.event.NotificationEvent;
+import dk.digitalidentity.simple_queue.QueueMessage;
+import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
+
 import dk.digitalidentity.medcommailbox.config.FolderConstants;
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.dao.model.FailedS3Key;
@@ -30,20 +50,6 @@ import jakarta.transaction.Transactional;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.UUID;
-
-import static dk.digitalidentity.medcommailbox.mapper.MedcomMapper.fromMedcom;
-import static dk.digitalidentity.medcommailbox.mapper.MedcomMapper.medcomFreeTextToHtml;
-import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getClinicalEmail;
 
 @Slf4j
 @Component
@@ -66,6 +72,8 @@ public class MailReceiver implements MedcomReceiver {
     private MedcomMailboxConfiguration config;
     @Autowired
     private BinaryService binaryService;
+	@Autowired
+	private ApplicationEventPublisher eventPublisher;
 
     @Override
     public boolean isHandled(final String s3Key) {
@@ -195,6 +203,13 @@ public class MailReceiver implements MedcomReceiver {
         String[] fileNameSplit = s3Key.split("/");
         String fileName = fileNameSplit[fileNameSplit.length - 1].replace(".xml", "").replace(".encrypted", "");
         mailService.toArchive(savedMail, fileName, medcomXml.getFileContents());
+
+		final String receiverEan = clinicalEmail.getReceiver().getEANIdentifier();
+		eventPublisher.publishEvent(QueueMessage.builder()
+				.queue(NOTIFICATION_QUEUE)
+				.body(JsonSimpleMessage.toJson(NotificationEvent.builder().inboxEan(receiverEan).negative(false).build()))
+				.build()
+		);
 
         MedcomLog log = new MedcomLog();
         log.setMailTts(LocalDateTime.now());

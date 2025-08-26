@@ -1,5 +1,43 @@
 package dk.digitalidentity.medcommailbox.controller.rest;
 
+import dk.digitalidentity.medcommailbox.config.ConfigurationReader;
+import static dk.digitalidentity.medcommailbox.Constants.FOLDER_CREATE_ID;
+import static dk.digitalidentity.medcommailbox.Constants.FOLDER_INBOX_ID;
+import static dk.digitalidentity.medcommailbox.util.UuidDash.removeDashes;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+
+import jakarta.servlet.http.HttpSession;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.datatables.mapping.DataTablesInput;
+import org.springframework.data.jpa.datatables.mapping.DataTablesOutput;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
 import dk.digitalidentity.medcommailbox.config.FolderConstants;
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.config.Sender;
@@ -7,16 +45,15 @@ import dk.digitalidentity.medcommailbox.dao.model.Binary;
 import dk.digitalidentity.medcommailbox.dao.model.BinaryMessage;
 import dk.digitalidentity.medcommailbox.dao.model.InboxFolder;
 import dk.digitalidentity.medcommailbox.dao.model.Mail;
+import dk.digitalidentity.medcommailbox.dao.model.MessageTemplate;
 import dk.digitalidentity.medcommailbox.dao.model.Patient;
 import dk.digitalidentity.medcommailbox.dao.model.Recipient;
-import dk.digitalidentity.medcommailbox.dao.model.MessageTemplate;
 import dk.digitalidentity.medcommailbox.dao.model.Reference;
 import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
 import dk.digitalidentity.medcommailbox.dao.model.enums.EpisodeOfCareStatusCode;
 import dk.digitalidentity.medcommailbox.dao.model.enums.Folder;
 import dk.digitalidentity.medcommailbox.dao.model.enums.ReferenceType;
 import dk.digitalidentity.medcommailbox.dao.model.enums.Status;
-import dk.digitalidentity.medcommailbox.datatables.MailDatatableDao;
 import dk.digitalidentity.medcommailbox.datatables.model.MailboxDatatableDTO;
 import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
 import dk.digitalidentity.medcommailbox.security.RequireUserAccess;
@@ -33,47 +70,16 @@ import dk.digitalidentity.medcommailbox.service.S3Service;
 import dk.digitalidentity.medcommailbox.service.cpr.ICprService;
 import dk.digitalidentity.medcommailbox.service.cpr.dto.CprLookupDto;
 import dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.ObjectExtensionCodeType;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.datatables.mapping.DataTablesInput;
-import org.springframework.data.jpa.datatables.mapping.DataTablesOutput;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-
-import static dk.digitalidentity.medcommailbox.Constants.FOLDER_CREATE_ID;
-import static dk.digitalidentity.medcommailbox.Constants.FOLDER_INBOX_ID;
-import static dk.digitalidentity.medcommailbox.util.UuidDash.removeDashes;
 
 @Slf4j
 @RestController
 @RequireUserAccess
 public class MailRestController {
+
+    private final ConfigurationReader configurationReader;
 
 	@Autowired
 	private MailService mailService;
@@ -97,13 +103,8 @@ public class MailRestController {
 	private BinaryMessageService binaryMessageService;
 	@Autowired
 	private MedcomSenderService senderService;
-
-	@Autowired
-	private MailDatatableDao mailDatatableDao;
-
 	@Autowired
 	private ICprService iCprService;
-
 	@Autowired
 	private MessageTemplateService messageTemplateService;
 
@@ -115,6 +116,10 @@ public class MailRestController {
 				   String caseId) {
 	}
 
+    MailRestController(ConfigurationReader configurationReader) {
+        this.configurationReader = configurationReader;
+    }
+
 	/**
 	 * Endpoint for the mailbox datatable
 	 *
@@ -122,24 +127,30 @@ public class MailRestController {
 	 * @param folder
 	 * @param bindingResult
 	 * @param inboxFolderId
+	 * @param httpSession 
 	 * @return
 	 */
 	@PostMapping("/rest/mail/{folder}")
-	public DataTablesOutput<MailboxDatatableDTO> mailDatatable(@Valid @RequestBody DataTablesInput input, @PathVariable Folder folder, BindingResult bindingResult, @RequestParam(name = "folder", required = false) Long inboxFolderId) {
+	public DataTablesOutput<MailboxDatatableDTO> mailDatatable(@Valid @RequestBody DataTablesInput input, @PathVariable Folder folder, BindingResult bindingResult, @RequestParam(name = "folder", required = false) Long inboxFolderId, HttpSession httpSession) {
 		DataTablesOutput<MailboxDatatableDTO> output = new DataTablesOutput<>();
 		if (bindingResult.hasErrors()) {
 			output.setError(bindingResult.toString());
 			return output;
 		}
 
-		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName());
-		if (constraints == null) {
-			output.setError("no constraint");
-			return output;
-		}
+		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
 
-		//Retrieve all mail in the system folder
-		if (inboxFolderId == null) {
+		if (!constraints.isEmpty()) {
+			String defaultInbox = (String) httpSession.getAttribute("selectedInbox");
+			
+			//limit mails to the selected inbox
+			if (defaultInbox != null && !constraints.isEmpty()) {
+				// remove all except selected constraint/inbox
+				constraints.removeIf(constraint -> !constraint.equals(defaultInbox));
+			}
+
+			output = mailService.getByFolderAndConstraints(input, folder, constraints.toArray(new String[] {}));
+		} else if (inboxFolderId == null) {
 			output = mailService.getByFolder(input, folder);
 		} else {
 			output = mailService.getByFolder(input, folder, inboxFolderId);
@@ -160,14 +171,18 @@ public class MailRestController {
 
 		}
 
-		if (!constraints.isEmpty()) {
-			output.setData(output.getData().stream()
-					.filter(m -> constraints.contains(m.getAssociatedIdentifier()))
-					.toList());
-
-		}
-
 		return output;
+	}
+
+	@PostMapping("/rest/mail/selectedInbox")
+	public String setDefaultInbox(@RequestParam(name = "inbox", required = false) String inbox, HttpSession httpSession) {
+		final Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
+		if (!StringUtils.isEmpty(inbox) && constraints.contains(inbox)) {
+			httpSession.setAttribute("selectedInbox", inbox);
+		} else {
+			httpSession.setAttribute("selectedInbox", constraints.stream().findFirst().orElseThrow());
+		}
+		return "mailbox";
 	}
 
 	@PostMapping("/rest/mails/{id}/archive")
@@ -179,6 +194,7 @@ public class MailRestController {
 
 		if (archive && mail.getFolder().equals(Folder.INBOX)) {
 			mail.setFolder(Folder.ARCHIVE);
+			mail.setInboxFolder(null);
 			mailService.save(mail);
 			return new ResponseEntity<>(HttpStatus.OK);
 		} else if (!archive && mail.getFolder().equals(Folder.ARCHIVE)) {
@@ -349,9 +365,12 @@ public class MailRestController {
 		if (!dto.answer && (dto.recipientEan == null || dto.recipientEan.isEmpty())) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en modtager");
 		}
-		final Recipient recipient = recipientService.findByEanIdentifier(dto.recipientEan).orElse(null);
+		Recipient recipient = recipientService.findByEanIdentifier(dto.recipientEan).orElse(null);
 		if (draft == null || (!dto.answer && recipient == null)) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		}
+		if (dto.answer && recipient == null && draft.getAnswerTo() != null) {
+			recipient = draft.getAnswerTo().getSender();
 		}
 
 		Sender sender = null;
@@ -398,7 +417,6 @@ public class MailRestController {
 		String content = dto.content;
 		boolean answerTooLong = false;
 		if (draft.getAnswerTo() != null) {
-
 			String tryContent = content + "\n______________________________\nSvar til: \n" + draft.getAnswerTo().getContent();
 
 			if (tryContent.replace("\n", "<Break/>").length() > 25000) {
@@ -521,8 +539,9 @@ public class MailRestController {
 	@GetMapping("/rest/mail/cprlookup/{cpr}")
 	public String getNameFromCpr(@PathVariable String cpr) {
 		CprLookupDto dto = iCprService.cprLookup(cpr);
-
-		return dto.getName() + " " + dto.getSurname();
+		return dto != null
+				? dto.getName() + " " + dto.getSurname()
+				: "";
 	}
 
 	public record TemplateDto(String name, String subject, boolean isHighPriority, String content) {
@@ -558,6 +577,28 @@ public class MailRestController {
 						template.isHighPriority(),
 						template.getContent()),
 				HttpStatus.OK);
+	}
+
+	@GetMapping("/rest/mails/{id}/downloadAsPdf")
+	public void downloadAsPdf(@PathVariable long id, HttpServletResponse response) throws IOException {
+		Mail mail = mailService.getById(id);
+		if (mail == null) {
+			throw new IllegalArgumentException("Mail not found.");
+		}
+
+		String html = mailService.getPdfHtml(mail);
+		byte[] pdf = mailService.convertHtmlToPdf(html);
+		
+		String fileNameDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+	
+		String filename = "mail_" + fileNameDateTime + ".pdf";
+
+		response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
+		response.setContentType(MediaType.APPLICATION_PDF_VALUE);
+
+		try (InputStream is = new java.io.ByteArrayInputStream(pdf)) {
+			org.springframework.util.StreamUtils.copy(is, response.getOutputStream());
+		}
 	}
 
 }

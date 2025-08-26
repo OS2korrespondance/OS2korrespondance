@@ -1,5 +1,23 @@
 package dk.digitalidentity.medcommailbox.service;
 
+import static dk.digitalidentity.medcommailbox.event.Events.NOTIFICATION_QUEUE;
+import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getNegativeReceipt;
+import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getNegativeVansReceipt;
+import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getPositiveReceipt;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import dk.digitalidentity.medcommailbox.event.NotificationEvent;
+import dk.digitalidentity.simple_queue.QueueMessage;
+import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
+
+import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.dao.model.FailedS3Key;
 import dk.digitalidentity.medcommailbox.dao.model.MedcomLog;
 import dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType;
@@ -13,16 +31,6 @@ import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getNegativeReceipt;
-import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getNegativeVansReceipt;
-import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getPositiveReceipt;
 
 @Slf4j
 @Service
@@ -32,9 +40,17 @@ public class ReceiptHandler {
     @Autowired
     private FailedS3KeyService failedS3KeyService;
     @Autowired
-    private S3Service s3Service;
+    private RecipientService recipientService;
+    @Autowired
+    private MessageSource messageSource;
+    @Autowired
+    private EmailService emailService;
+    @Autowired
+    private MedcomMailboxConfiguration config;
+	@Autowired
+	private ApplicationEventPublisher eventPublisher;
 
-    @Getter
+	@Getter
     @Setter
     public static class ReceiptResult {
         private String refuseText;
@@ -61,6 +77,7 @@ public class ReceiptHandler {
             result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(originalEmessage.getRefuseText() == null
                     ? originalEmessage.getOriginalLetters().getFirst().getRefuseText()
                     : originalEmessage.getRefuseText()));
+            sendEmailNotification(negativeReceipt.getReceiver().getEANIdentifier());
         });
         getNegativeVansReceipt(receipt).ifPresent(negativeVansReceipt -> {
             final NegativeVansReceipt.OriginalEmessage originalEmessage = negativeVansReceipt.getOriginalEmessage();
@@ -70,6 +87,7 @@ public class ReceiptHandler {
             result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(originalEmessage.getRefuseText() == null
                     ? originalEmessage.getOriginalLetters().getFirst().getRefuseText()
                     : originalEmessage.getRefuseText()));
+			sendEmailNotification(negativeVansReceipt.getReceiver().getEANIdentifier());
         });
         if (result.getReceiptType() == null) {
             throw new RuntimeException("Tried to handle receipt with S3 file Key: " + medcomXml.getS3Key() + ", but positive, negative and negative vans receipt was null.");
@@ -94,6 +112,13 @@ public class ReceiptHandler {
         exitingLog.setNegativeReceiptReason(result.getRefuseText());
         logService.save(exitingLog);
         return Optional.of(result);
+    }
+
+    private void sendEmailNotification(final String ean) {
+		eventPublisher.publishEvent(QueueMessage.builder()
+				.queue(NOTIFICATION_QUEUE)
+				.body(JsonSimpleMessage.toJson(NotificationEvent.builder().inboxEan(ean).negative(false).build()))
+		);
     }
 
 }

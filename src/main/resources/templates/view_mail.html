@@ -15,6 +15,7 @@
 		            <div class="col-lg-9 animated fadeInRight">
 		            	<div class="mail-box-header">
 			                <div class="float-right tooltip-demo">
+                                <button th:if="${@medcomMailboxConfiguration.isDownloadAsPdf()}" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Videresend besked" onclick="mailService.downloadPDF(this)" th:attr="data-id=${mail.id}"><i class="fa fa-file-pdf-o"></i> Download PDF</button>
 			                    <a th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT OR mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED}" th:href="'/mail/' + ${mail.id} + '/forward'" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Videresend besked"><i class="fa fa-share"></i>  Videresend</a>
 			                    <a th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT OR mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED}" th:href="'/mail/' + ${mail.id} + '/answer'" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Svar besked"><i class="fa fa-reply"></i>  Svar</a>
 			                    <button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}"  class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked" onclick="modalService.openMoveModal()" th:attr="data-id=${mail.id}"><i class="fa fa-folder-open"></i></button>
@@ -395,6 +396,35 @@
      	    			});
                     }
 	            });
+			}
+
+			this.downloadPDF = function(elem) {
+				const mailId = elem.dataset.id;
+				let text = 'Du er ved at downloade en potentiel <b class="text-danger">følsom</b> fil til din egen enhed. <br/> Det er <b class="text-danger">vigtigt</b>, at du sørger for at slette filen, når du ikke længere har brug for den.';
+				let icon = "warning";
+				swal({
+					html: true,
+					title : "Fil download",
+					text : text,
+					type : icon,
+					showCancelButton : true,
+					confirmButtonColor : "#DD6B55",
+					confirmButtonText : 'Fortsæt',
+					cancelButtonText : 'Annuller',
+					closeOnConfirm : true,
+					closeOnCancel : true
+				},
+				(isConfirm) => {
+					if (isConfirm) {
+			            var downloadUrl = '/rest/mails/' + mailId + '/downloadAsPdf';
+			            var a = document.createElement('a');
+			            a.href = downloadUrl;
+			            a.download = "mail.pdf";
+			            document.body.appendChild(a);
+			            a.click();
+			            document.body.removeChild(a);
+					}
+				});
 			}
 		}
 

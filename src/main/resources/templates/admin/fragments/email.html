@@ -1,0 +1,66 @@
+<div th:fragment="email">
+    <div id="emailConfiguration" class="table-responsive">
+        <table id="recipientsTable" width="100%">
+            <thead>
+                <tr>
+                    <th data-ordrable="false"></th>
+                </tr>
+            </thead>
+            <tfoot></tfoot>
+            <tbody>
+                <tr th:each="inbox : ${inboxes}">
+    <!--            hidden col for searching -->
+                    <td>
+                        <th:block th:text="${inbox.organisationName}"></th:block>
+                    </td>
+                    <td>
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <em class="fa fa-user"></em> &nbsp; <th:block th:text="${inbox.organisationName}"></th:block>
+                            </div>
+                            <div class="ibox-content">
+                                <div class="d-flex mt-3" style="padding-left:15px;">
+                                    <div class="ml-1 mr-2">
+                                        <input type="checkbox" class="i-checks" th:checked="${inbox.negativeReceiptNotification}" th:data-inbox="${inbox.eanIdentifier}" onchange="setNegativeReceiptNotification(this)">
+                                    </div>
+                                    <label>Aktivér notifikationer for negative kvitteringer</label>
+                                </div>
+                                <div class="table-responsive">
+                                    <table width="100%" class="table table-hover table-borderless">
+                                        <thead style="display: none;">
+                                            <tr>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="sub : ${subscribers.get(inbox.eanIdentifier)}">
+                                                <td class="w-100 text-truncate" th:text="${sub.email}"></td>
+                                                <td class="text-right text-nowrap">
+                                                    <button type="button" class="btn btn-white" onclick="removeSubscriber(this)" th:data-inbox="${inbox.eanIdentifier}" th:data-email="${sub.email}"><em class="fa fa-trash"></em></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <div class="input-group d-flex justify-content-end">
+                                                        <input th:id="'text-input-' + ${inbox.eanIdentifier}" autocomplete="off" oninput="this.classList.remove('is-invalid');" type="text" class="form-control ml-auto" />
+                                                        <div class="input-group-append">
+                                                            <button type="button" class="btn btn-outline-primary" onclick="addSubscriber(this)" th:data-inbox="${inbox.eanIdentifier}"><em class="fa fa-plus"></em>&nbsp; Tilføj</button>
+                                                        </div>
+                                                        <div th:id="'email-error-' + ${inbox.eanIdentifier}" class="invalid-feedback"></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

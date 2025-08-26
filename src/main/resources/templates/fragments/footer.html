@@ -73,7 +73,51 @@
 
 		<!-- Global handlers -->
 		<script th:src="@{/js/handlers.js}"></script>
+        
+        <!-- Script for navbar -->
+        <script>
+            $(document).ready(function () {
+                $('#navbar-inbox').on('show.bs.collapse', function () {
+                    $('#navbar').collapse('hide');
+                });
 
+                $('#navbar').on('show.bs.collapse', function () {
+                    $('#navbar-inbox').collapse('hide');
+                });
+            });
+
+            function selectInbox(elem) {
+                var inbox = elem.dataset.inbox;
+                
+                $.ajax({
+                    url: "/rest/mail/selectedInbox?inbox=" + inbox,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token
+                    },
+                    success: function(data, textStatus, jQxhr) {
+                        window.location = '/mailbox/INBOX'
+                    }
+                });
+            }
+
+        (function ($) {
+            $.fn.getThen = function (url, params) {
+                if (this.length <= 0) {
+                    return jQuery.Deferred().resolveWith(this, ['']);
+                }
+
+                return jQuery.ajax({
+                    url: url,
+                    type: "GET",
+                    dataType: "html",
+                    data: params
+                }).then(function (responseText) {
+                    return jQuery.parseHTML(responseText);
+                });
+            };
+        }(jQuery));
+        </script>
 	</div>
 </body>
 </html>

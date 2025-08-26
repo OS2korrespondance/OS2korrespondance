@@ -6,6 +6,8 @@ import java.util.Optional;
 import dk.digitalidentity.medcommailbox.dao.MailDao;
 import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import dk.digitalidentity.medcommailbox.dao.RecipientDao;
@@ -42,6 +44,10 @@ public class RecipientService {
 
 	public boolean isRecipientInUse(final Recipient recipient) {
 		return mailDao.countByRecipientIs(recipient) > 0;
+	}
+
+	public Optional<Recipient> findById(@NotNull Long id) {
+		return recipientDao.findById(id);
 	}
 
 }

@@ -7,7 +7,8 @@ $(document).ready(function() {
 
     //Init cpr lookup function
     const cprInput = document.getElementById('patientCpr')
-    cprInput.addEventListener('keyup', (event)=> mailService.onCprChange(event))
+    cprInput.addEventListener('input', (event)=> mailService.onCprChange(event))
+    cprInput.dispatchEvent(new Event("input"))
 
     const messageTemplateSelect = document.getElementById('messageTemplateSelect')
     messageTemplateSelect.addEventListener('change', (event)=> templateService.onTemplateSelectionChange(messageTemplateSelect))
