@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="da">
 <body>
 <div th:fragment="topbar" class="row border-bottom white-bg">
-    <nav class="navbar navbar-expand-lg navbar-static-top"
+    <nav class="navbar navbar-expand-lg navbar-static-top f-flex"
          role="navigation">
-        <a sec:authorize="!isAuthenticated()" th:href="@{/}" class="navbar-brand" style="background: white; padding-bottom: 0px; padding-top: 0px;">
+        <a sec:authorize="!isAuthenticated()" th:href="@{/}" class="navbar-brand mr-auto" style="background: white; padding-bottom: 0px; padding-top: 0px;">
 			<img class="img-fluid" src="/img/logo.png" style="display: inline; max-width: 30vw; max-height: 70px;">
         </a>
-        <a sec:authorize="isAuthenticated()" th:href="@{/mailbox/INBOX}" class="navbar-brand" style="background: white; padding-bottom: 0px; padding-top: 0px;">
+        <a sec:authorize="isAuthenticated()" th:href="@{/mailbox/INBOX}" class="navbar-brand mr-auto" style="background: white; padding-bottom: 0px; padding-top: 0px;">
 			<img class="img-fluid" src="/img/logo.png" style="display: inline; max-width: 30vw; max-height: 70px;">
         </a>
+
         <button class="navbar-toggler" type="button" data-toggle="collapse"
                 data-target="#navbar" aria-expanded="false"
                 aria-label="Toggle navigation">
@@ -20,11 +21,17 @@
 			<ul class="nav navbar-nav mr-auto">
 				<th:block sec:authorize="isAuthenticated()">
 					<!-- menu -->
-					<li sec:authorize="hasRole('ROLE_USER')" th:class="${page != null && #strings.startsWith(page, 'mailbox')} ? 'active' : ''">
-	                	<a th:href="@{/mailbox/INBOX}">
-	                    	Indbakke
-	                    </a>
-	                </li>
+                    <li th:if="${@mailService.constraints != null && @mailService.constraints.size > 0}" class="dropdown show">
+                        <a data-toggle="dropdown" href="#" aria-expanded="true"> <i class="fa fa-inbox"></i> Indbakke <span th:if="${@mailService.totalUnread > 0}" th:text="${@mailService.totalUnread}" class="label label-primary"></span></a>
+                        <ul class="dropdown-menu">
+                            <li th:each="entry : ${@mailService.getConstraints()}" th:class="${#ctx.session.selectedInbox != null && #ctx.session.selectedInbox == entry.key ? 'active' : ''}">
+                                <a href="javascript:;" th:onclick="selectInbox(this)" th:data-inbox="${entry.key}" style="width: 300px;">
+                                    <span class="mr-1" th:text="${entry.value.name}"></span>
+                                    <span th:if="${entry.value.unread > 0}" th:text="${entry.value.unread}" class="mr-auto label label-primary"></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
 					<li th:class="${page != null && #strings.startsWith(page, 'medcomlogs')} ? 'active' : ''">
 	                	<a th:href="@{/logs}">
 	                    	MedcomLog
@@ -40,8 +47,26 @@
                             Modtagere
                         </a>
                     </li>
+                    <li sec:authorize="hasRole('ROLE_ADMIN')" th:class="'d-sm-block d-md-block d-lg-none ' + ${page != null && #strings.startsWith(page, 'settings') ? 'active' : ''}">
+                        <a th:href="@{/admin/settings}">
+                            <i class="fa fa-cog"></i> Indstillinger
+                        </a>
+                    </li>
+                    <li class="d-lg-none">
+                         <a onclick="document.forms['logoutForm'].submit()" type="submit">
+                            <i class="fa fa-sign-out"></i> &nbsp; Log ud
+                        </a>
+                    </li>
 				</th:block>
 			</ul>
+
+            <ul sec:authorize="isAuthenticated() && hasRole('ROLE_ADMIN')" class="d-none d-lg-inline nav navbar-top-links navbar-right">
+                <li th:class="${page != null && #strings.startsWith(page, 'settings')} ? 'active' : ''">
+                    <a th:href="@{/admin/settings}">
+                        <i class="fa fa-cog"></i> Indstillinger
+                    </a>
+                </li>
+            </ul>
 
             <ul sec:authorize="isAuthenticated()" class="d-none d-lg-inline nav navbar-top-links navbar-right">
                 <li class="dropdown show">

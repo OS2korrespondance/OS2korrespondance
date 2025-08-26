@@ -7,7 +7,7 @@
 
     <title>OS2korrespondance</title>
     
-	<link rel="shortcut icon" th:href="@{/favicon.ico}" type="image/vnd.microsoft.icon" />
+	<link rel="shortcut icon"  type="image/svg+xml" th:href="@{/img/favicon.svg}" />
 
 	<link rel="stylesheet" th:href="@{/webjars/inspinia/2.9.3/css/bootstrap.min.css}" />
 	<link rel="stylesheet" th:href="@{/webjars/inspinia/2.9.3/font-awesome/css/font-awesome.css}" />
@@ -66,6 +66,16 @@
 	
 	<!-- Ovveride default Inspinia style with custom vikar UI -->
 	<link rel="stylesheet" th:href="@{/css/medcom-mailbox.css}" />
+
+    <style>
+        .dropdown-menu > li > a {
+        	display: flex;
+        	flex-direction: row;
+        	align-items: center;
+        	justify-content: flex-start;
+        	flex-wrap: nowrap;
+        }
+    </style>
 </head>
 <body>
 </body>

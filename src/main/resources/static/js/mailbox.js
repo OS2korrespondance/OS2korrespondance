@@ -18,8 +18,8 @@ function MailboxService() {
                 "lengthMenu" : "_MENU_ beskeder per side",
                 "info" : "Viser _START_ til _END_ af _TOTAL_ beskeder",
                 "zeroRecords" : "Ingen data...",
-                "infoEmpty" : "Henter data...",
-                "infoFiltered" : "(ud af _MAX_ beskeder)",
+                "infoEmpty" : "Ingen meddelelser...",
+                "infoFiltered": "",
                 "paginate" : {
                     "previous" : "Forrige",
                     "next" : "Næste"

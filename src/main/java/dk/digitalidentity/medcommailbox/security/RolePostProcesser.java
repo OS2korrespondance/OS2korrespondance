@@ -37,6 +37,8 @@ public class RolePostProcesser implements SamlLoginPostProcessor {
 			} else if (userRole.equals(grantedAuthority.getAuthority())) {
 				newAuthorities.add(new SamlGrantedAuthority(RoleConstants.USER, grantedAuthority.getConstraints()));
 			}
+			//Test data
+			//List.of(new Constraint("http://os2korrespondance.dk/constraints/lokationsnummer/1", "5790001382432,2220001382432,5790000120400,5790000121441"))
 		}
 
 		// no roles, no access
