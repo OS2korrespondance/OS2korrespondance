@@ -12,7 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import dk.digitalidentity.medcommailbox.dao.model.MedcomLog;
+import dk.digitalidentity.medcommailbox.model.entity.MedcomLog;
 import dk.digitalidentity.medcommailbox.service.MedcomLogService;
 import lombok.extern.slf4j.Slf4j;
 

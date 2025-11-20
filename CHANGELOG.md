@@ -5,6 +5,17 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
+## [1.4.0] - 2025-11-20
+Release 2025r3
+
+### Added
+- [KORRES-35](https://os2web.atlassian.net/browse/KORRES-35) Journalisering af vedhæftede filer
+- [KORRES-52](https://os2web.atlassian.net/browse/KORRES-52) Modtag vedhæftede filer fra eksterntsystem
+
+### Fixed
+- [KORRES-50](https://os2web.atlassian.net/browse/KORRES-50) Uhensigsmæssig oprettelse af modtagere.
+- [KORRES-53](https://os2web.atlassian.net/browse/KORRES-53) Filtrering på postkasser - Navn på postkasse skal stå i indbakkeoverskriften
+
 ## [1.3.0] - 2025-08-26  
 Release 2025r2  
 
@@ -15,9 +26,9 @@ Release 2025r2
 - [KORRES-43](https://os2web.atlassian.net/browse/KORRES-43) Mulighed for at hente korrespondance som PDF
 
 ### Fixed
-- [KORRES-17](https://os2web.atlassian.net/browse/KORRES-17) Mulighed for at skelne mellem lokationsnumre
+- [KORRES-17](https://os2web.atlassian.net/browse/KORRES-17) Mobil logud knap mangler
 - [KORRES-9](https://os2web.atlassian.net/browse/KORRES-9) Mobil loggud knap mangler
-- [KORRES-45](https://os2web.atlassian.net/browse/KORRES-45) OS2-ikon, til når webstedet gemmes som favorit
+- [KORRES-45](https://os2web.atlassian.net/browse/KORRES-45) Ændringer til visning af antal i Indbakken
 
   
 ## [1.2.0] - 2024-12-19  

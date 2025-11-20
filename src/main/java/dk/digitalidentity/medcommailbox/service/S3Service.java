@@ -1,7 +1,7 @@
 package dk.digitalidentity.medcommailbox.service;
 
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
-import dk.digitalidentity.medcommailbox.dao.model.Binary;
+import dk.digitalidentity.medcommailbox.model.entity.Binary;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.EnableCaching;
@@ -53,6 +53,10 @@ public class S3Service {
         this.config = config;
     }
 
+	public boolean encrypting() {
+		return secretKeySpec != null;
+	}
+
     public List<String> getFileKeysFromFolder(String foldername) {
 		String bucket = config.getS3().getBucketName();
 		ArrayList<String> result = new ArrayList<>();
@@ -94,6 +98,21 @@ public class S3Service {
 		}
 		return fileContent;
 	}
+
+	/**
+	 * @throws ResponseStatusException if an error happens during download
+	 * You may need to make sure the groupId has the right FolderConstant prefix applied to it, otherwise it will try to find the file in root of the bucket
+	 */
+	public byte[] downloadFromS3(String groupId) {
+		log.info("Key: " + groupId);
+		byte[] fileContent;
+		try {
+			fileContent = downloadBytes(groupId);
+		} catch (IOException e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+		return fileContent;
+	}
 	
 	@SneakyThrows
     public byte[] downloadBytes(String key) throws IOException {
@@ -104,9 +123,7 @@ public class S3Service {
 					.key(key)
 					.build());
 		} catch (S3Exception e) {
-			if (e.statusCode() == 404) {
-				log.debug("Not found. Bucket: " + bucket + " Key: " + key);
-			}
+			log.error("Error while downloading file from S3, filename: " + key, e);
 			return null;
 		}
 		final ResponseInputStream<GetObjectResponse> response = s3Client.getObject(GetObjectRequest.builder()

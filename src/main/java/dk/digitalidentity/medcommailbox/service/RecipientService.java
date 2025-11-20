@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Optional;
 
 import dk.digitalidentity.medcommailbox.dao.MailDao;
-import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
+import dk.digitalidentity.medcommailbox.model.entity.enums.IdentifierCode;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import dk.digitalidentity.medcommailbox.dao.RecipientDao;
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
 
 @Service
 public class RecipientService {

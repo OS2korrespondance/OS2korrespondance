@@ -1,6 +1,6 @@
 package dk.digitalidentity.medcommailbox.dao;
 
-import dk.digitalidentity.medcommailbox.dao.model.Inbox;
+import dk.digitalidentity.medcommailbox.model.entity.Inbox;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

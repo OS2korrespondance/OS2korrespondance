@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import dk.digitalidentity.medcommailbox.dao.model.AuditLog;
+import dk.digitalidentity.medcommailbox.model.entity.AuditLog;
 
 public interface AuditLogDao extends JpaRepository<AuditLog, Long> {
 	AuditLog findById(long id);

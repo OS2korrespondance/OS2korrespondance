@@ -1,7 +1,7 @@
 package dk.digitalidentity.medcommailbox.controller.rest;
 
 import dk.digitalidentity.medcommailbox.controller.rest.dto.AuditLogDatatableDTO;
-import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
+import dk.digitalidentity.medcommailbox.model.entity.enums.AuditLogOperation;
 import dk.digitalidentity.medcommailbox.datatables.AuditLogDatatableDao;
 import dk.digitalidentity.medcommailbox.datatables.model.AuditLogDatatable;
 import dk.digitalidentity.medcommailbox.security.RequireAdminAccess;

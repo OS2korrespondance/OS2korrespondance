@@ -1,9 +1,12 @@
 package dk.digitalidentity.medcommailbox.config;
 
+import dk.digitalidentity.medcommailbox.config.properties.Cpr;
+import dk.digitalidentity.medcommailbox.config.properties.SwaggerConfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.stereotype.Component;
 
 import dk.digitalidentity.medcommailbox.config.properties.Cpr;
@@ -28,7 +31,10 @@ public class MedcomMailboxConfiguration {
 	private boolean allowAttachments = false;
 	private boolean createArchives = true;
 	private String s3EncryptionKey = null;
+	@NestedConfigurationProperty
 	private Cpr cpr = new Cpr();
 	private Email email = new Email();
 	private boolean downloadAsPdf = true;
+	@NestedConfigurationProperty
+	private SwaggerConfiguration swagger = new SwaggerConfiguration();
 }

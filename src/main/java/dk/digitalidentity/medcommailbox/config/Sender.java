@@ -1,6 +1,6 @@
 package dk.digitalidentity.medcommailbox.config;
 
-import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
+import dk.digitalidentity.medcommailbox.model.entity.enums.IdentifierCode;
 import lombok.Getter;
 import lombok.Setter;
 

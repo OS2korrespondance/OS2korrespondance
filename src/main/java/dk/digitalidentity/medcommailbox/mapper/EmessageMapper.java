@@ -2,15 +2,16 @@ package dk.digitalidentity.medcommailbox.mapper;
 
 import dk.digitalidentity.medcommailbox.config.Sender;
 import dk.digitalidentity.medcommailbox.dao.BinaryDao;
-import dk.digitalidentity.medcommailbox.dao.model.Binary;
-import dk.digitalidentity.medcommailbox.dao.model.BinaryMessage;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.Binary;
+import dk.digitalidentity.medcommailbox.model.entity.BinaryMessage;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
 import dk.digitalidentity.medcommailbox.service.S3Service;
 import dk.digitalidentity.medcommailbox.util.XmlUtil;
 import dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.BinaryLetter;
 import dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.BinaryLetterLetterType;
 import dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.BinaryLetterPatientType;
 import dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.BinaryLetterSenderType;
+import dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.MedicalSpecialityCodeType;
 import dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.Receiver;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.BreakableText;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.CTRLReceiverType;
@@ -179,7 +180,7 @@ public class EmessageMapper {
         clinicalEmail.getClinicalInformations().addAll(clinicalInformationList);
         List<Reference> referenceList = new ArrayList<>();
 
-        for(dk.digitalidentity.medcommailbox.dao.model.Reference mailRef : mail.getReferences()) {
+        for(dk.digitalidentity.medcommailbox.model.entity.Reference mailRef : mail.getReferences()) {
             final Binary binary = binaryDao.findFirstByIdentifier(ensureDashes(mailRef.getObjectIdentifier()))
                     .orElseThrow(() -> new IllegalArgumentException("Could not find binary file"));
             Reference reference = new Reference();
@@ -479,6 +480,7 @@ public class EmessageMapper {
         sender.setIdentifier(configSender.getIdentifier());
         sender.setIdentifierCode(toMedcom2012(configSender.getIdentifierCode()));
         sender.setOrganisationName(StringUtils.truncate(configSender.getOrganisationName(), 35));
+		sender.setMedicalSpecialityCode(MedicalSpecialityCodeType.IKKEKLASSIFICERET);
         return sender;
     }
 

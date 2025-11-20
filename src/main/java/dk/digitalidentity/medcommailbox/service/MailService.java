@@ -6,24 +6,30 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import com.lowagie.text.DocumentException;
-import dk.digitalidentity.medcommailbox.dao.model.InboxFolder;
+import dk.digitalidentity.medcommailbox.model.entity.InboxFolder;
 import dk.digitalidentity.medcommailbox.security.SecurityUtil;
+import dk.digitalidentity.medcommailbox.service.dafolo.ArchiveBinaryService;
+import dk.digitalidentity.medcommailbox.service.dafolo.ArchiveXmlService;
+import dk.digitalidentity.medcommailbox.service.dafolo.ArchiveZipBuilder;
+import dk.digitalidentity.medcommailbox.service.dafolo.FilarkivXmlSerializer;
+import dk.digitalidentity.medcommailbox.service.dafolo.model.BinaryData;
+import dk.digitalidentity.medcommailbox.service.dafolo.model.Filarkiv;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import dk.digitalidentity.medcommailbox.config.FolderConstants;
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.config.Sender;
 import dk.digitalidentity.medcommailbox.dao.MailDao;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
-import dk.digitalidentity.medcommailbox.dao.model.enums.Folder;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Folder;
 import dk.digitalidentity.medcommailbox.datatables.MailDatatableDao;
 import dk.digitalidentity.medcommailbox.datatables.model.MailboxDatatableDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +46,6 @@ import static org.springframework.data.jpa.domain.Specification.where;
 @Slf4j
 public class MailService {
 	@Autowired
-	private MedcomMailboxConfiguration configuration;
-
-	@Autowired
 	private MailDao mailDao;
 
 	@Autowired
@@ -57,6 +60,18 @@ public class MailService {
 	@Autowired
 	private MailDatatableDao mailDatatableDao;
 
+	@Autowired
+	private ArchiveXmlService archiveXmlService;
+
+	@Autowired
+	private FilarkivXmlSerializer filarkivXmlSerializer;
+
+	@Autowired
+	private ArchiveBinaryService archiveBinaryService;
+
+	@Autowired
+	private ArchiveZipBuilder archiveZipBuilder;
+
 	private static final Pattern INVALID_XML_CHARS =
 			Pattern.compile("[^\t\n\r\u0020-\uD7FF\uE000-\uFFFD]+");
 
@@ -67,7 +82,7 @@ public class MailService {
 	 * @throws ResponseStatusException if access is not allowed
 	 */
 	public void hasAccess(Mail mail) {
-		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
+		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(config.getLocationNumberConstraintName(), config);
 		if (!constraints.isEmpty() && constraints.stream().noneMatch(c -> mail.getAssociatedIdentifier().contains(c))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
@@ -76,14 +91,14 @@ public class MailService {
 	public record UnreadInInboxDTO(long unread, String name) {}
 	
 	public HashMap<String, UnreadInInboxDTO> getConstraints() {
-		final Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
+		final Set<String> constraints = SecurityUtil.getLocationNumberConstraint(config.getLocationNumberConstraintName(), config);
 
 		final HashMap<String, UnreadInInboxDTO> result = new HashMap<>();
 		for (String constraint : constraints) {
 			long unread = getUnreadForRootFolder(Folder.INBOX, Set.of(constraint));
 			
 			//find matching Sender
-			Sender sender = configuration.getSenders().stream().filter(s -> s.getEanIdentifier().equals(constraint)).findAny().orElse(null);
+			Sender sender = config.getSenders().stream().filter(s -> s.getEanIdentifier().equals(constraint)).findAny().orElse(null);
 			if (sender == null) {
 				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No sender configured for identifier: " + constraint);
 			}
@@ -94,8 +109,34 @@ public class MailService {
 		return result;
 	}
 
+	public Optional<String> getSenderName(String constraint) {
+		if (constraint == null || constraint.trim().isEmpty()) {
+			log.debug("getSenderName called with null or empty constraint");
+			return Optional.empty();
+		}
+
+		try {
+			final Set<String> allowedConstraints = SecurityUtil.getLocationNumberConstraint(config.getLocationNumberConstraintName(), config);
+			
+			if (!allowedConstraints.contains(constraint)) {
+				log.debug("Constraint '{}' not found.", constraint);
+				return Optional.empty();
+			}
+
+			return config.getSenders().stream()
+				.filter(sender -> constraint.equals(sender.getEanIdentifier()))
+				.map(Sender::getOrganisationName)
+				.filter(Objects::nonNull)
+				.findFirst();
+				
+		} catch (Exception e) {
+			log.warn("Error retrieving sender name for constraint '{}': {}", constraint, e.getMessage(), e);
+			return Optional.empty();
+		}
+	}
+
 	public long getTotalUnread() {
-		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
+		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(config.getLocationNumberConstraintName(), config);
 
 		if (constraints == null) {
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No location number constraints found");
@@ -194,17 +235,70 @@ public class MailService {
 	}
 
 	public void toArchive(Mail mail, String name, byte[] xml) {
-		if (!configuration.isCreateArchives()) {
+		if (!config.isCreateArchives()) {
 			log.info("Not creating archive, feature disabled");
 			return;
 		}
 		try {
 			String html = getPdfHtml(mail);
 			byte[] pdf = convertHtmlToPdf(html);
-			s3Service.upload(FolderConstants.FOLDER_ARCHIVE, name + ".pdf", pdf);
-			s3Service.upload(FolderConstants.FOLDER_ARCHIVE, name + ".xml", xml);
+//			s3Service.upload(config.getS3().getArchiveDirectory(), name + ".pdf", pdf);
+			s3Service.upload(config.getS3().getArchiveDirectory(), name + ".xml", xml);
+			createAndUploadZipArchive(mail, name, pdf);
+
 		} catch (Exception e) {
 			log.error("Could not upload copy to archive for mail with id {}", mail.getId(), e);
+		}
+	}
+
+	private void createAndUploadZipArchive(Mail mail, String name, byte[] pdf) {
+		try {
+			// Build index.xml structure
+			String pdfFileName = name + ".pdf";
+			Filarkiv filarkiv = archiveXmlService.buildFilarkiv(mail, pdfFileName);
+			byte[] indexXml = filarkivXmlSerializer.toXmlBytes(filarkiv);
+
+			// Fetch binaries from S3
+			BinaryData binaryData = archiveBinaryService.fetchBinariesFromS3(mail);
+
+			// Build ZIP file
+			byte[] zipFile = archiveZipBuilder.buildArchiveZip(
+					indexXml,
+					pdfFileName,
+					pdf,
+					binaryData.getAttachments(),
+					binaryData.getAttachmentFileNames()
+			);
+
+			// TEMPORARY: Save locally for testing
+			//saveZipLocally(zipFile, name);
+
+			// Upload ZIP to S3
+			s3Service.upload(config.getS3().getArchiveDirectory(), name + ".zip", zipFile);
+
+			log.info("Successfully created ZIP archive for mail {} with {} attachments",
+					mail.getId(), binaryData.getAttachments().size());
+
+		} catch (Exception e) {
+			log.error("Could not create ZIP archive for mail with id {}", mail.getId(), e);
+		}
+	}
+
+	/**
+	 * TEMPORARY: Save ZIP file locally for testing
+	 */
+	private void saveZipLocally(byte[] zipFile, String name) {
+		try {
+			java.nio.file.Path outputPath = java.nio.file.Paths.get(
+					System.getProperty("user.home"),
+					"medcom-archives",
+					name + ".zip"
+			);
+			java.nio.file.Files.createDirectories(outputPath.getParent());
+			java.nio.file.Files.write(outputPath, zipFile);
+			log.info("Saved ZIP locally to: {}", outputPath.toAbsolutePath());
+		} catch (Exception e) {
+			log.error("Could not save ZIP locally", e);
 		}
 	}
 

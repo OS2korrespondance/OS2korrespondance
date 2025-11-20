@@ -1,6 +1,5 @@
 package dk.digitalidentity.medcommailbox.controller.rest;
 
-import dk.digitalidentity.medcommailbox.config.ConfigurationReader;
 import static dk.digitalidentity.medcommailbox.Constants.FOLDER_CREATE_ID;
 import static dk.digitalidentity.medcommailbox.Constants.FOLDER_INBOX_ID;
 import static dk.digitalidentity.medcommailbox.util.UuidDash.removeDashes;
@@ -12,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
@@ -34,26 +34,27 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import dk.digitalidentity.medcommailbox.config.FolderConstants;
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.config.Sender;
-import dk.digitalidentity.medcommailbox.dao.model.Binary;
-import dk.digitalidentity.medcommailbox.dao.model.BinaryMessage;
-import dk.digitalidentity.medcommailbox.dao.model.InboxFolder;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
-import dk.digitalidentity.medcommailbox.dao.model.MessageTemplate;
-import dk.digitalidentity.medcommailbox.dao.model.Patient;
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
-import dk.digitalidentity.medcommailbox.dao.model.Reference;
-import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
-import dk.digitalidentity.medcommailbox.dao.model.enums.EpisodeOfCareStatusCode;
-import dk.digitalidentity.medcommailbox.dao.model.enums.Folder;
-import dk.digitalidentity.medcommailbox.dao.model.enums.ReferenceType;
-import dk.digitalidentity.medcommailbox.dao.model.enums.Status;
+import dk.digitalidentity.medcommailbox.model.entity.Binary;
+import dk.digitalidentity.medcommailbox.model.entity.BinaryMessage;
+import dk.digitalidentity.medcommailbox.model.entity.InboxFolder;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.Patient;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.MessageTemplate;
+import dk.digitalidentity.medcommailbox.model.entity.Reference;
+import dk.digitalidentity.medcommailbox.model.entity.enums.AuditLogOperation;
+import dk.digitalidentity.medcommailbox.model.entity.enums.EpisodeOfCareStatusCode;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Folder;
+import dk.digitalidentity.medcommailbox.model.entity.enums.ReferenceType;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Status;
+import dk.digitalidentity.medcommailbox.datatables.MailDatatableDao;
 import dk.digitalidentity.medcommailbox.datatables.model.MailboxDatatableDTO;
 import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
 import dk.digitalidentity.medcommailbox.security.RequireUserAccess;
@@ -78,8 +79,6 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequireUserAccess
 public class MailRestController {
-
-    private final ConfigurationReader configurationReader;
 
 	@Autowired
 	private MailService mailService;
@@ -115,10 +114,6 @@ public class MailRestController {
 				   String patientName, String patientCpr, boolean highPriority, String senderIdentifier,
 				   String caseId) {
 	}
-
-    MailRestController(ConfigurationReader configurationReader) {
-        this.configurationReader = configurationReader;
-    }
 
 	/**
 	 * Endpoint for the mailbox datatable
@@ -308,7 +303,7 @@ public class MailRestController {
 			draft.setBinaryMessage(savedMessage);
 		}
 
-		final String s3key = s3Service.upload(FolderConstants.FOLDER_BIN, filename, content);
+		final String s3key = s3Service.upload(configuration.getS3().getBinDirectory(), filename, content);
 		final String binIdentifier = UUID.randomUUID().toString();
 		final Binary binary = new Binary();
 		binary.setExtensionCode(objectExtensionCodeType.value());
@@ -335,6 +330,104 @@ public class MailRestController {
 				.map(Reference::getId)
 				.findFirst().orElse(0L), HttpStatus.OK);
 
+	}
+
+	public record PreloadedAttachmentDTO(String fileName, String content) {}
+
+	@PostMapping("/rest/mails/{id}/attachment/add-preloaded")
+	public ResponseEntity<?> addPreloadedAttachment(
+			@PathVariable long id,
+			@RequestBody PreloadedAttachmentDTO attachmentDTO) throws IOException {
+
+		final Mail draft = mailService.getById(id);
+		if (draft == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		}
+
+		if (draft.getReferences().size() >= 10) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der må maks uploades 10 vedhæftninger.");
+		}
+
+		if (attachmentDTO.content() == null || attachmentDTO.content().isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fil indhold mangler");
+		}
+
+		// Decode base64 content
+		byte[] content = Base64.getDecoder().decode(attachmentDTO.content());
+
+		if (draft.getBinaryMessage() != null) {
+			long totalSize = draft.getBinaryMessage().getBinaries().stream()
+					.mapToLong(Binary::getOriginalSize)
+					.sum();
+			if (totalSize + content.length > 100000000) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Størrelsen på de vedhæftede filer overskrider maks (100MB)");
+			}
+		}
+
+		String filename = attachmentDTO.fileName();
+		if (StringUtils.isEmpty(filename)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ingen fil uploadet");
+		}
+
+		final String cleanedFilename = filename.replace(".jpg", ".jpeg");
+		for (final Reference att : draft.getReferences()) {
+			if (att.getFilename().equals(filename)) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der findes allerede en fil med det navn");
+			}
+		}
+
+		if (content == null || content.length == 0) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ingen fil uploadet");
+		}
+
+		final ObjectExtensionCodeType objectExtensionCodeType = Arrays.stream(ObjectExtensionCodeType.values())
+				.filter(t -> {
+					if (StringUtils.endsWithIgnoreCase(cleanedFilename, t.value())) {
+						return true;
+					}
+					if (t.value().equals(ObjectExtensionCodeType.JPEG.value())
+							&& StringUtils.endsWithIgnoreCase(cleanedFilename, "jpg")) {
+						return true;
+					}
+					return t.value().equals(ObjectExtensionCodeType.TIFF.value())
+							&& StringUtils.endsWithIgnoreCase(cleanedFilename, "tif");
+				})
+				.findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Denne filtype supporteres ikke."));
+
+		if (draft.getBinaryMessage() == null) {
+			final BinaryMessage message = new BinaryMessage();
+			message.setIncomming(false);
+			final BinaryMessage savedMessage = binaryMessageService.save(message);
+			draft.setBinaryMessage(savedMessage);
+		}
+
+		final String s3key = s3Service.upload(configuration.getS3().getBinDirectory(), filename, content);
+		final String binIdentifier = UUID.randomUUID().toString();
+		final Binary binary = new Binary();
+		binary.setExtensionCode(objectExtensionCodeType.value());
+		binary.setCode(emessageMapper.extensionToCode(objectExtensionCodeType).value());
+		binary.setOriginalSize((long) content.length);
+		binary.setIdentifier(binIdentifier);
+		binary.setS3FileKey(s3key);
+		final Binary savedBinary = binaryService.save(binary);
+		savedBinary.setMessage(draft.getBinaryMessage());
+		draft.getBinaryMessage().getBinaries().add(savedBinary);
+
+		final Reference newAttachment = new Reference();
+		newAttachment.setFilename(filename);
+		newAttachment.setMail(draft);
+		newAttachment.setReferenceType(ReferenceType.BIN);
+		newAttachment.setObjectIdentifier(removeDashes(binIdentifier));
+		newAttachment.setObjectExtensionCode(objectExtensionCodeType.value());
+		newAttachment.setObjectOriginalSize((long) content.length);
+
+		draft.getReferences().add(newAttachment);
+		final Mail savedMail = mailService.save(draft);
+
+		return new ResponseEntity<>(savedMail.getReferences().stream()
+				.filter(r -> Objects.equals(r.getObjectIdentifier(), newAttachment.getObjectIdentifier()))
+				.map(Reference::getId)
+				.findFirst().orElse(0L), HttpStatus.OK);
 	}
 
 	@PostMapping("/rest/mails/{id}/attachment/{attachmentId}/delete")

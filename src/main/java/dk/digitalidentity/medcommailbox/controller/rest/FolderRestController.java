@@ -1,9 +1,7 @@
 package dk.digitalidentity.medcommailbox.controller.rest;
 
-import dk.digitalidentity.medcommailbox.dao.model.InboxFolder;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.InboxFolder;
 import dk.digitalidentity.medcommailbox.security.RequireAdminAccess;
-import dk.digitalidentity.medcommailbox.security.RequireUserAccess;
 import dk.digitalidentity.medcommailbox.service.InboxFolderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

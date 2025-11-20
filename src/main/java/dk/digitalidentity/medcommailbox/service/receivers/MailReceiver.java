@@ -20,17 +20,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import dk.digitalidentity.medcommailbox.config.FolderConstants;
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
-import dk.digitalidentity.medcommailbox.dao.model.FailedS3Key;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
-import dk.digitalidentity.medcommailbox.dao.model.MedcomLog;
-import dk.digitalidentity.medcommailbox.dao.model.Patient;
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
-import dk.digitalidentity.medcommailbox.dao.model.Reference;
-import dk.digitalidentity.medcommailbox.dao.model.enums.Folder;
-import dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType;
-import dk.digitalidentity.medcommailbox.dao.model.enums.Status;
+import dk.digitalidentity.medcommailbox.model.entity.FailedS3Key;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.MedcomLog;
+import dk.digitalidentity.medcommailbox.model.entity.Patient;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.Reference;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Folder;
+import dk.digitalidentity.medcommailbox.model.entity.enums.ReceiptType;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Status;
 import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
 import dk.digitalidentity.medcommailbox.service.BinaryService;
 import dk.digitalidentity.medcommailbox.service.FailedS3KeyService;
@@ -150,7 +149,7 @@ public class MailReceiver implements MedcomReceiver {
             sender.setIdentifier(clinicalEmail.getSender().getIdentifier());
             sender.setIdentifierCode(fromMedcom(clinicalEmail.getSender().getIdentifierCode()));
             sender.setShortOrganisationName(clinicalEmail.getSender().getOrganisationName());
-            sender.setFullOrganisationName(clinicalEmail.getSender().getOrganisationName());
+            sender.setFullOrganisationName(clinicalEmail.getSender().getOrganisationName() + " - " + clinicalEmail.getSender().getDepartmentName());
             sender = recipientService.save(sender);
         }
         sender.setDepartmentName(clinicalEmail.getSender().getDepartmentName());
@@ -275,7 +274,7 @@ public class MailReceiver implements MedcomReceiver {
         final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_mm_dd_HH_mm_ss");
         final String uuid = UUID.randomUUID().toString();
         final String fileKey = uuid+"_negative_receipt_"+now.format(dateFormatter)+".xml";
-        s3Service.upload(FolderConstants.FOLDER_OUT, fileKey, file);
+        s3Service.upload(config.getS3().getOutDirectory(), fileKey, file);
 
         MedcomLog log = new MedcomLog();
         log.setMailXml(new String(xml.getFileContents(), StandardCharsets.ISO_8859_1));
@@ -304,7 +303,7 @@ public class MailReceiver implements MedcomReceiver {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
         String uuid = UUID.randomUUID().toString();
         String fileKey = uuid+"_positive_receipt_"+now.format(dateFormatter)+".xml";
-        s3Service.upload(FolderConstants.FOLDER_OUT, fileKey, file);
+        s3Service.upload(config.getS3().getOutDirectory(), fileKey, file);
 
         mailReceiptLog.setReceiptTts(now);
         mailReceiptLog.setReceiptType(ReceiptType.POSITIVE);
@@ -331,7 +330,7 @@ public class MailReceiver implements MedcomReceiver {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_mm_dd_HH_mm_ss");
         String uuid = UUID.randomUUID().toString();
         String fileKey = uuid+"_negative_receipt_"+now.format(dateFormatter)+".xml";
-        s3Service.upload(FolderConstants.FOLDER_OUT, fileKey, file);
+        s3Service.upload(config.getS3().getOutDirectory(), fileKey, file);
 
         if (existingLog == null) {
             existingLog = new MedcomLog();

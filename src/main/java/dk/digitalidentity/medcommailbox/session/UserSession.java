@@ -5,11 +5,16 @@ import lombok.Setter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.SessionScope;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Component
 @SessionScope
 @Getter
 @Setter
-public class UserSession {
+public class UserSession implements Serializable {
+	@Serial
+	private static final long serialVersionUID = 1L;
 
     private LandingInfo landingInfo;
 

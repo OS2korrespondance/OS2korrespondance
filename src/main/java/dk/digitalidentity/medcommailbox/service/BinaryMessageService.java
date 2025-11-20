@@ -1,8 +1,7 @@
 package dk.digitalidentity.medcommailbox.service;
 
 import dk.digitalidentity.medcommailbox.dao.BinaryMessageDao;
-import dk.digitalidentity.medcommailbox.dao.model.BinaryMessage;
-import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
+import dk.digitalidentity.medcommailbox.model.entity.BinaryMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

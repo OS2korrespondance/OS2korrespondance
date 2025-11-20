@@ -21,15 +21,16 @@
                                 <span th:text="${inboxFolder.name}"></span>
                             </th:block>
                             <th:block th:unless="${inboxFolder != null}">
-                                <span th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}">Indbakke </span>
-                                <span th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).ARCHIVE}">Arkiv </span>
-                                <span th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}">Sendte beskeder </span>
-                                <span th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED}">Slettede beskeder </span>
+                                <span th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).INBOX}">Indbakke </span>
+                                <span th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).ARCHIVE}">Arkiv </span>
+                                <span th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}">Sendte beskeder </span>
+                                <span th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).DELETED}">Slettede beskeder </span>
                             </th:block>
-                            <span th:text="'(' + ${folderCount} + ')'"></span>
+                            <span th:text="'(' + ${inboxUnreadCount} + ')'"></span>
                         </h2>
+                        <h4 class="font-normal" th:text="${@mailService.getSenderName(#ctx.session.selectedInbox).orElse('')}"></h4>
                         <div class="mail-tools tooltip-demo m-t-md"
-                             th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}">
+                             th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).INBOX}">
                             <button class="btn btn-white btn-sm" data-toggle="tooltip" data-placement="left"
                                     title="Refresh indbakke" onclick="window.location.reload()"><i
                                     class="fa fa-refresh"></i> Hent beskeder
@@ -48,8 +49,8 @@
                             <tr>
                                 <th name="id" >id</th>
                                 <th class="align-middle" ><span>Høj prioritet</span></th>
-                                <th  th:unless="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="col-lg-2 align-bottom" >Afsender</th>
-                                <th th:if="${folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="col-lg-2 align-bottom" >Modtager</th>
+                                <th  th:unless="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="col-lg-2 align-bottom" >Afsender</th>
+                                <th th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="col-lg-2 align-bottom" >Modtager</th>
                                 <th class="col-lg-2 align-bottom">Navn</th>
                                 <th class="col-lg-1 align-bottom">Cpr</th>
                                 <th class="col-lg-5 align-bottom" >Emne</th>

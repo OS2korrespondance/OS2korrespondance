@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import dk.digitalidentity.medcommailbox.dao.model.InboxFolder;
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.InboxFolder;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
-import dk.digitalidentity.medcommailbox.dao.model.enums.Folder;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Folder;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 

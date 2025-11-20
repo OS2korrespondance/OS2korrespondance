@@ -1,13 +1,12 @@
 package dk.digitalidentity.medcommailbox.service;
 
-import dk.digitalidentity.medcommailbox.config.FolderConstants;
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.config.Sender;
 import dk.digitalidentity.medcommailbox.controller.rest.korrespondance.CaseIdWrapper;
-import dk.digitalidentity.medcommailbox.dao.model.BinaryMessage;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
-import dk.digitalidentity.medcommailbox.dao.model.MedcomLog;
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.BinaryMessage;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.MedcomLog;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
 import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
 import dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.BinaryLetter;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2006._07._01.Emessage;
@@ -34,6 +33,7 @@ public class MedcomSenderService {
     private final S3Service s3Service;
     private final MedcomLogService logService;
     private final MailService mailService;
+	private final MedcomMailboxConfiguration configuration;
 
     @Transactional
     public void sendMessage(final Mail draft, final Sender sender) {
@@ -42,10 +42,10 @@ public class MedcomSenderService {
         if (result == null || StringUtils.isEmpty(result.xml())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kunne ikke omdanne beskeden til xml, den blev derfor ikke sendt");
         }
-        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_mm_dd_HH_mm_ss");
+        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
         String uuid = UUID.randomUUID().toString();
         String fileName = uuid+"_"+draft.getSent().format(dateFormatter);
-        String key = s3Service.upload(FolderConstants.FOLDER_OUT, fileName + ".xml", getXmlBytes(result.xml()));
+        String key = s3Service.upload(configuration.getS3().getOutDirectory(), fileName + ".xml", getXmlBytes(result.xml()));
         draft.setEnvelopeIdentifier(result.envelopeIdentifier());
         draft.setLetterIdentifier(result.letterIdentifier());
         draft.setS3FileKey(key);
@@ -64,12 +64,12 @@ public class MedcomSenderService {
         if (binResult == null || StringUtils.isEmpty(binResult.xml())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kunne ikke omdanne beskeden til xml, den blev derfor ikke sendt");
         }
-        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_mm_dd_HH_mm_ss");
+        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
         final String uuid = UUID.randomUUID().toString();
         final String fileName = uuid+"_"+draft.getSent().format(dateFormatter);
         // Do we need the binkey saved somewhere?
         final String binKey =
-                s3Service.upload(FolderConstants.FOLDER_OUT, fileName + ".xml", getXmlBytes(binResult.xml()));
+                s3Service.upload(configuration.getS3().getOutDirectory(), fileName + ".xml", getXmlBytes(binResult.xml()));
         binaryMessage.setEnvelopeIdentifier(binResult.envelopeIdentifier());
         binaryMessage.setLetterIdentifier(binResult.letterIdentifier());
 

@@ -1,9 +1,9 @@
 package dk.digitalidentity.medcommailbox.mapper;
 
-import dk.digitalidentity.medcommailbox.dao.model.Reference;
-import dk.digitalidentity.medcommailbox.dao.model.enums.EpisodeOfCareStatusCode;
-import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
-import dk.digitalidentity.medcommailbox.dao.model.enums.ReferenceType;
+import dk.digitalidentity.medcommailbox.model.entity.Reference;
+import dk.digitalidentity.medcommailbox.model.entity.enums.EpisodeOfCareStatusCode;
+import dk.digitalidentity.medcommailbox.model.entity.enums.IdentifierCode;
+import dk.digitalidentity.medcommailbox.model.entity.enums.ReferenceType;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2006._07._01.EpisodeOfCareStatusCode01Type;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2006._07._01.FixedFont;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2006._07._01.FormattedTextType;
@@ -51,8 +51,8 @@ public abstract class MedcomMapper {
         return reference;
     }
 
-    public static dk.digitalidentity.medcommailbox.dao.model.enums.MedicalSpecialityCodeType fromMedcom(final MedicalSpecialityCodeType medicalSpecialityCodeType) {
-        return dk.digitalidentity.medcommailbox.dao.model.enums.MedicalSpecialityCodeType.valueOf(StringUtils.lowerCase(medicalSpecialityCodeType.name()));
+    public static dk.digitalidentity.medcommailbox.model.entity.enums.MedicalSpecialityCodeType fromMedcom(final MedicalSpecialityCodeType medicalSpecialityCodeType) {
+        return dk.digitalidentity.medcommailbox.model.entity.enums.MedicalSpecialityCodeType.valueOf(StringUtils.lowerCase(medicalSpecialityCodeType.name()));
     }
 
     public static IdentifierCode fromMedcom(final IdentifierCodeType identifierCodeType) {

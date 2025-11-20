@@ -1,6 +1,6 @@
 package dk.digitalidentity.medcommailbox.dao;
 
-import dk.digitalidentity.medcommailbox.dao.model.InboxFolder;
+import dk.digitalidentity.medcommailbox.model.entity.InboxFolder;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface InboxFolderDao extends JpaRepository<InboxFolder, Long> {

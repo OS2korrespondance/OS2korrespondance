@@ -1,9 +1,9 @@
 package dk.digitalidentity.medcommailbox.dao;
 
-import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
+import dk.digitalidentity.medcommailbox.model.entity.enums.IdentifierCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
 
 import java.util.Optional;
 

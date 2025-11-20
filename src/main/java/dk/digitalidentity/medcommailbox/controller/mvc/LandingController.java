@@ -1,12 +1,14 @@
 package dk.digitalidentity.medcommailbox.controller.mvc;
 
-import dk.digitalidentity.medcommailbox.dao.model.enums.EpisodeOfCareStatusCode;
+import dk.digitalidentity.medcommailbox.model.entity.enums.EpisodeOfCareStatusCode;
 import dk.digitalidentity.medcommailbox.security.RequireUserAccess;
 import dk.digitalidentity.medcommailbox.session.LandingInfo;
 import dk.digitalidentity.medcommailbox.session.UserSession;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +17,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.Objects;
 
+@Slf4j
 @Controller
 public class LandingController {
 
@@ -33,31 +36,37 @@ public class LandingController {
                           @RequestParam(value = "subject", required = false) final String subject,
                           @RequestParam(value = "status", required = false) final String episodeOfCareStatus,
                           @RequestParam(value = "case_id", required = false) final String caseId,
+                          @RequestParam(value = "group_id", required = false) final String groupId,
                           @RequestParam("area") final LandingArea landingArea) {
         if (landingArea == LandingArea.send_message) {
-            userSession.setLandingInfo(LandingInfo.builder()
-                            .caseId(cleanupParam(caseId))
-                            .patientName(cleanupParam(patientName))
-                            .episodeOfCareStatusCode(episodeOfCareStatus != null ? EpisodeOfCareStatusCode.valueOf(cleanupParam(episodeOfCareStatus)) : null)
-                            .patientCpr(cleanupCpr(patientCpr))
-                            .receiverEan(cleanupParam(receiverEan))
-                            .senderEan(cleanupParam(senderEan))
-                            .subject(cleanupParam(subject))
-                    .build());
+			LandingInfo landingInfo = LandingInfo.builder()
+					.caseId(cleanupParam(caseId))
+					.patientName(cleanupParam(patientName))
+					.episodeOfCareStatusCode(episodeOfCareStatus != null ? EpisodeOfCareStatusCode.valueOf(cleanupParam(episodeOfCareStatus)) : null)
+					.patientCpr(cleanupCpr(patientCpr))
+					.receiverEan(cleanupParam(receiverEan))
+					.senderEan(cleanupParam(senderEan))
+					.subject(cleanupParam(subject))
+					.groupId(cleanupParam(groupId))
+					.build();
+			log.info("Sending landing info: {}", landingInfo);
+			userSession.setLandingInfo(landingInfo);
             return "redirect:/mail/new";
         }
         return "redirect:/error";
     }
 
     record LandingInfoBody(LandingController.LandingArea area, String sender_ean, String receiver_ean, String patient_cpr, String patient_name,
-                           String subject, String case_id, String episode_of_care_status) {}
+                           String subject, String case_id, String episode_of_care_status, String group_id) {}
     /**
      * This method will redirect the post request to a GET request on a secured endpoint, this ensures that parameters
      * are not lost when the user needs to login
      */
+	@CrossOrigin(origins = "*", maxAge = 3600)
     @PostMapping(value = "/landing/form")
     public RedirectView landingPost(@SuppressWarnings("ClassEscapesDefinedScope") final LandingInfoBody body,
                                     final RedirectAttributes redirectAttributes) {
+		log.info("Received landing form: {}", body);
         if (body.area == LandingController.LandingArea.send_message) {
             redirectAttributes.addAttribute("area", body.area);
             if (body.case_id != null) {
@@ -81,6 +90,11 @@ public class LandingController {
             if (body.subject != null) {
                 redirectAttributes.addAttribute("subject", body.subject);
             }
+			if (body.group_id != null) {
+				redirectAttributes.addAttribute("group_id", body.group_id);
+			}
+			log.info("Redirecting to landing with attributes: case_id={}, patient_name={}, episode_of_care_status={}, patient_cpr={}, receiver_ean={}, sender_ean={}, subject={}, group_id{}",
+					body.case_id, body.patient_name, body.episode_of_care_status, "hidden", body.receiver_ean, body.sender_ean, body.subject, body.group_id);
             return new RedirectView("/landing");
         }
         return new RedirectView("/error");

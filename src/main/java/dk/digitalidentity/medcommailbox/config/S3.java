@@ -7,4 +7,8 @@ import lombok.Setter;
 @Setter
 public class S3 {
 	private String bucketName;
+	private String binDirectory;
+	private String inDirectory;
+	private String outDirectory;
+	private String archiveDirectory;
 }
