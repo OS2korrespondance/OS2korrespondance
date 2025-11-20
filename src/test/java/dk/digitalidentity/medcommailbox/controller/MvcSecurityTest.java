@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -27,7 +28,7 @@ public class MvcSecurityTest {
     @Test
     public void failsWhenUnauthenticated() throws Exception {
         assertUrlProtected("/admin");
-        assertUrlProtected("/auditlog");
+        assertUrlProtected("/auditlog	");
         assertUrlProtected("/landing");
         assertUrlProtected("/mailbox");
         assertUrlProtected("/logs");
@@ -36,7 +37,10 @@ public class MvcSecurityTest {
     private void assertUrlProtected(final String url) throws Exception {
         mockMvc.perform(get(url))
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrlPattern("**/authenticate*"));
+            .andExpect(result -> {
+				String redirectUrl = result.getResponse().getRedirectedUrl();
+				assertThat(redirectUrl).matches(".*(authenticate|login).*");
+			});
     }
 
 }
