@@ -1,18 +1,17 @@
 package dk.digitalidentity.medcommailbox.service.receivers;
 
-import dk.digitalidentity.medcommailbox.config.FolderConstants;
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.dao.BinaryDao;
 import dk.digitalidentity.medcommailbox.dao.BinaryMessageDao;
 import dk.digitalidentity.medcommailbox.dao.MailDao;
-import dk.digitalidentity.medcommailbox.dao.model.Binary;
-import dk.digitalidentity.medcommailbox.dao.model.BinaryMessage;
-import dk.digitalidentity.medcommailbox.dao.model.FailedS3Key;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
-import dk.digitalidentity.medcommailbox.dao.model.MedcomLog;
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
-import dk.digitalidentity.medcommailbox.dao.model.enums.Folder;
-import dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType;
+import dk.digitalidentity.medcommailbox.model.entity.Binary;
+import dk.digitalidentity.medcommailbox.model.entity.BinaryMessage;
+import dk.digitalidentity.medcommailbox.model.entity.FailedS3Key;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.MedcomLog;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Folder;
+import dk.digitalidentity.medcommailbox.model.entity.enums.ReceiptType;
 import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
 import dk.digitalidentity.medcommailbox.service.FailedS3KeyService;
 import dk.digitalidentity.medcommailbox.service.MedcomLogService;
@@ -130,7 +129,7 @@ public class BinaryReceiver implements MedcomReceiver {
                     s.setIdentifier(binaryLetter.getSender().getIdentifier());
                     s.setIdentifierCode(fromMedcom(binaryLetter.getSender().getIdentifierCode()));
                     s.setShortOrganisationName(binaryLetter.getSender().getOrganisationName());
-                    s.setFullOrganisationName(binaryLetter.getSender().getOrganisationName());
+                    s.setFullOrganisationName(binaryLetter.getSender().getOrganisationName() + " - " + binaryLetter.getSender().getDepartmentName());
                     return recipientService.save(s);
                 });
         String str = emessage.getEnvelope().getSent().getDate() + " " + emessage.getEnvelope().getSent().getTime();
@@ -156,7 +155,7 @@ public class BinaryReceiver implements MedcomReceiver {
                 throw new BadFileSizeException("Forventede " + filesize + " bytes, men modtog: " + fileContent.length);
             }
 
-            final String uploadedS3Key = s3Service.upload(FolderConstants.FOLDER_BIN, obj.getObjectIdentifier() + "." + obj.getObjectExtensionCode(), fileContent);
+            final String uploadedS3Key = s3Service.upload(config.getS3().getBinDirectory(), obj.getObjectIdentifier() + "." + obj.getObjectExtensionCode(), fileContent);
             binary.setS3FileKey(uploadedS3Key);
             binaryMessage.getBinaries().add(binary);
             Optional<Mail> mail = mailDao.findFirstByOriginalFolderAndReferencesObjectIdentifier(Folder.INBOX, UuidDash.removeDashes(obj.getObjectIdentifier()));
@@ -201,10 +200,10 @@ public class BinaryReceiver implements MedcomReceiver {
                 emessageMapper.createNegativeReceiptForBinary(emessage, now, refuseText, refuseCode);
         final String negativeXml = marshal(marshaller2005, negReceipt);
         final byte[] file = negativeXml.getBytes(StandardCharsets.ISO_8859_1);
-        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_mm_dd_HH_mm_ss");
+        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
         final String uuid = UUID.randomUUID().toString();
         final String fileKey = uuid+"_negative_receipt_"+now.format(dateFormatter)+".xml";
-        s3Service.upload(FolderConstants.FOLDER_OUT, fileKey, file);
+        s3Service.upload(config.getS3().getOutDirectory(), fileKey, file);
 
         MedcomLog log = new MedcomLog();
         log.setMailXml("");
@@ -232,7 +231,7 @@ public class BinaryReceiver implements MedcomReceiver {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
         String uuid = UUID.randomUUID().toString();
         String fileKey = uuid+"_positive_receipt_"+now.format(dateFormatter)+".xml";
-        s3Service.upload(FolderConstants.FOLDER_OUT, fileKey, file);
+        s3Service.upload(config.getS3().getOutDirectory(), fileKey, file);
         receiptLog.setReceiptTts(now);
         receiptLog.setReceiptType(ReceiptType.POSITIVE);
         receiptLog.setReceiptXml(xml);
@@ -250,10 +249,10 @@ public class BinaryReceiver implements MedcomReceiver {
         final dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage eMessage = emessageMapper.createNegativeReceiptForBinary(message, now, refuseText, "problem_med_version");
         final String negativeXml = marshal(marshaller2005, eMessage);
         final byte[] file = negativeXml.getBytes(StandardCharsets.ISO_8859_1);
-        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_mm_dd_HH_mm_ss");
+        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
         final String uuid = UUID.randomUUID().toString();
         final String fileKey = uuid+"_negative_receipt_"+now.format(dateFormatter)+".xml";
-        s3Service.upload(FolderConstants.FOLDER_OUT, fileKey, file);
+        s3Service.upload(config.getS3().getOutDirectory(), fileKey, file);
 
         if (existingLog == null) {
             existingLog = new MedcomLog();

@@ -16,31 +16,31 @@
 		            	<div class="mail-box-header">
 			                <div class="float-right tooltip-demo">
                                 <button th:if="${@medcomMailboxConfiguration.isDownloadAsPdf()}" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Videresend besked" onclick="mailService.downloadPDF(this)" th:attr="data-id=${mail.id}"><i class="fa fa-file-pdf-o"></i> Download PDF</button>
-			                    <a th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT OR mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED}" th:href="'/mail/' + ${mail.id} + '/forward'" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Videresend besked"><i class="fa fa-share"></i>  Videresend</a>
-			                    <a th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT OR mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED}" th:href="'/mail/' + ${mail.id} + '/answer'" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Svar besked"><i class="fa fa-reply"></i>  Svar</a>
-			                    <button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}"  class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked" onclick="modalService.openMoveModal()" th:attr="data-id=${mail.id}"><i class="fa fa-folder-open"></i></button>
-			                    <button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}"  class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Arkiver besked" onclick="mailService.archive(true)" th:attr="data-id=${mail.id}"><i class="fa fa-archive"></i> </button>
-			                	<button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).ARCHIVE}"  class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked til indbakke" onclick="mailService.archive(false)" th:attr="data-id=${mail.id}"><i class="fa fa-inbox"></i> </button>
-			                	<button th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED}" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked til slettede beskeder" onclick="mailService.delete(true)" th:attr="data-id=${mail.id}"><i class="fa fa-trash"></i> </button>
-			                	<button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED AND mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX}" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked tilbage til indbakke" onclick="mailService.delete(false, 'indbakke')" th:attr="data-id=${mail.id}"><i class="fa fa-inbox"></i> </button>
-			                	<button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).DELETED AND mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked tilbage til sendte beskeder" onclick="mailService.delete(false, 'sendte beskeder')" th:attr="data-id=${mail.id}"><i class="fa fa-inbox"></i> </button>
+			                    <a th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT OR mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).DELETED}" th:href="'/mail/' + ${mail.id} + '/forward'" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Videresend besked"><i class="fa fa-share"></i>  Videresend</a>
+			                    <a th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT OR mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).DELETED}" th:href="'/mail/' + ${mail.id} + '/answer'" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Svar besked"><i class="fa fa-reply"></i>  Svar</a>
+			                    <button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).INBOX}"  class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked" onclick="modalService.openMoveModal()" th:attr="data-id=${mail.id}"><i class="fa fa-folder-open"></i></button>
+			                    <button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).INBOX}"  class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Arkiver besked" onclick="mailService.archive(true)" th:attr="data-id=${mail.id}"><i class="fa fa-archive"></i> </button>
+			                	<button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).ARCHIVE}"  class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked til indbakke" onclick="mailService.archive(false)" th:attr="data-id=${mail.id}"><i class="fa fa-inbox"></i> </button>
+			                	<button th:unless="${mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).DELETED}" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked til slettede beskeder" onclick="mailService.delete(true)" th:attr="data-id=${mail.id}"><i class="fa fa-trash"></i> </button>
+			                	<button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).DELETED AND mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).INBOX}" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked tilbage til indbakke" onclick="mailService.delete(false, 'indbakke')" th:attr="data-id=${mail.id}"><i class="fa fa-inbox"></i> </button>
+			                	<button th:if="${mail.folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).DELETED AND mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="btn btn-white" data-toggle="tooltip" data-placement="top" title="Flyt besked tilbage til sendte beskeder" onclick="mailService.delete(false, 'sendte beskeder')" th:attr="data-id=${mail.id}"><i class="fa fa-inbox"></i> </button>
 			                </div>
 
 			                <h2 th:text="'Emne: ' + ${mail.subject}"></h2>
 			                <div class="mail-tools tooltip-demo m-t-md">
 			                    <h5>
-			                        <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="float-right font-normal" th:text="${#temporals.format(mail.sent, 'dd/MM/yyyy HH:mm')}"></span>
-			                        <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="float-right font-normal" th:text="${#temporals.format(mail.received, 'dd/MM/yyyy HH:mm')}"></span>
-			                        <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="font-normal" th:utext="'<strong>Fra:</strong> ' + ${mail.sender.fullOrganisationName}"></span>
-			                        <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="font-normal" th:utext="'<strong>Til:</strong> ' + ${mail.recipient.fullOrganisationName}"></span>
+			                        <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="float-right font-normal" th:text="${#temporals.format(mail.sent, 'dd/MM/yyyy HH:mm')}"></span>
+			                        <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="float-right font-normal" th:text="${#temporals.format(mail.received, 'dd/MM/yyyy HH:mm')}"></span>
+			                        <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="font-normal" th:utext="'<strong>Fra:</strong> ' + ${mail.sender.fullOrganisationName}"></span>
+			                        <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="font-normal" th:utext="'<strong>Til:</strong> ' + ${mail.recipient.fullOrganisationName}"></span>
 									<th:block th:if="${mail.associatedIdentifier != null}">
-										&nbsp;<span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="font-normal" th:utext="'<strong>Til:</strong> ' + ${mail.associatedIdentifier}"></span>
-										&nbsp;<span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" class="font-normal" th:utext="'<strong>Fra:</strong> ' + ${mail.associatedIdentifier}"></span>
+										&nbsp;<span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="font-normal" th:utext="'<strong>Til:</strong> ' + ${mail.associatedIdentifier}"></span>
+										&nbsp;<span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="font-normal" th:utext="'<strong>Fra:</strong> ' + ${mail.associatedIdentifier}"></span>
 									</th:block>
 								</h5>
 			                </div>
 
-							<th:block th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}">
+							<th:block th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}">
 								<div class="font-normal" th:if="${mail.senderDepartmentName != null}"><strong>Afsenders afdelingsnavn: </strong><span th:text="${mail.senderDepartmentName}"></span></div>
 								<div class="font-normal" th:if="${mail.sender.getUnitName() != null}"><strong>Afsenders enhed: </strong><span th:text="${mail.sender.getUnitName()}"></span></div>
 								<div class="font-normal" th:if="${mail.senderMedicalSpecialityCode != null}"><strong>Afsenders medicinske speciale: </strong><span th:text="${mail.senderMedicalSpecialityCode.displayValue}"></span></div>
@@ -55,7 +55,7 @@
 									</p>
 								</th:block>
 							</th:block>
-			                <p th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT && mail.receivedNegativeReceipt}"><span class="label label-danger">Negativ kvittering</span> <strong>Afvisningsgrund:</strong> <span th:if="${mail.negativeReceiptReason != null}" th:text="${mail.negativeReceiptReason}"></span></p>
+			                <p th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT && mail.receivedNegativeReceipt}"><span class="label label-danger">Negativ kvittering</span> <strong>Afvisningsgrund:</strong> <span th:if="${mail.negativeReceiptReason != null}" th:text="${mail.negativeReceiptReason}"></span></p>
 			                <p>
 			                	<strong>Patient:</strong>
 			                	<span th:text="${mail.patient.name} + ' (' + ${mail.patient.cpr} + ' - ' + ${mail.patient.episodeOfCareStatusCode.displayValue} + ')'"></span>
@@ -78,7 +78,7 @@
 		                        </p>
 		                        <div class="attachment">
 		                            <div class="file-box" th:each="attachment : ${mail.references}">
-		                                <div class="file" th:if="${T(dk.digitalidentity.medcommailbox.dao.model.enums.ReferenceType).BIN == attachment.referenceType}"
+		                                <div class="file" th:if="${T(dk.digitalidentity.medcommailbox.model.entity.enums.ReferenceType).BIN == attachment.referenceType}"
 											 th:with="contentType=${T(dk.digitalidentity.medcommailbox.util.MedcomContentType).contentTypeFor(attachment.getObjectExtensionCode())}">
 		                                    <a th:attr="data-attachmentid=${attachment.id},data-contenttype=${contentType}" onclick="mailService.download(this)" >
 		                                        <span class="corner"></span>
@@ -92,14 +92,14 @@
 		                                        <div class="file-name" th:text="${@binaryService.getReferenceFilename(attachment)} + ' (' + ${T(dk.digitalidentity.medcommailbox.util.ThymeleafFormatters).readableFileSize(attachment.getObjectOriginalSize()) + ')'}" style="word-wrap: break-word !important; white-space: normal !important"></div>
 		                                    </a>
 		                                </div>
-		                                <div class="file" th:if="${T(dk.digitalidentity.medcommailbox.dao.model.enums.ReferenceType).SUP == attachment.referenceType}">
+		                                <div class="file" th:if="${T(dk.digitalidentity.medcommailbox.model.entity.enums.ReferenceType).SUP == attachment.referenceType}">
 	                                        <span class="corner"></span>
 	                                        <div class="icon">
 	                                            <i class="fa fa-database"></i>
 	                                        </div>
 	                                        <div class="file-name" th:text="${attachment.referenceDescription}" style="word-wrap: break-word !important; white-space: normal !important"></div>
 		                                </div>
-		                                <div class="file" th:if="${T(dk.digitalidentity.medcommailbox.dao.model.enums.ReferenceType).URL == attachment.referenceType}">
+		                                <div class="file" th:if="${T(dk.digitalidentity.medcommailbox.model.entity.enums.ReferenceType).URL == attachment.referenceType}">
 		                                	<a th:href="${attachment.referenceUrl}">
 		                                        <span class="corner"></span>
 		                                        <div class="icon">
@@ -126,7 +126,7 @@
 									<p th:if="${log.negativeReceiptReason != null}" th:utext="${log.negativeReceiptReason}"></p>
 								</th:block>
 								<th:block th:unless="${log != null AND log.receiptType != null}">
-									<p>Kvittering endnu ikke <span th:text="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX} ? 'afsendt' : 'modtaget'"></span></p>
+									<p>Kvittering endnu ikke <span th:text="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).INBOX} ? 'afsendt' : 'modtaget'"></span></p>
 								</th:block>
 							</div>
 						</div>
@@ -143,7 +143,7 @@
 									<p th:if="${binlog.negativeReceiptReason != null}" th:utext="${binlog.negativeReceiptReason}"></p>
 								</th:block>
 								<th:block th:unless="${binlog != null AND binlog.receiptType != null}">
-									<p>Kvittering endnu ikke <span th:text="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).INBOX} ? 'afsendt' : 'modtaget'"></span></p>
+									<p>Kvittering endnu ikke <span th:text="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).INBOX} ? 'afsendt' : 'modtaget'"></span></p>
 								</th:block>
 							</div>
 						</div>

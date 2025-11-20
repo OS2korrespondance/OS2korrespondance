@@ -13,6 +13,12 @@ $(document).ready(function() {
     const messageTemplateSelect = document.getElementById('messageTemplateSelect')
     messageTemplateSelect.addEventListener('change', (event)=> templateService.onTemplateSelectionChange(messageTemplateSelect))
 
+    // Preload attachments
+    if (typeof preloadedFiles !== 'undefined' && preloadedFiles && preloadedFiles.length > 0) {
+        preloadedFiles.forEach(function(file) {
+            mailService.preLoadAttachment(file.fileName, file.content, file.size);
+        });
+    }
 });
 
 function MailService() {
@@ -66,10 +72,6 @@ function MailService() {
                 error: defaultErrorHandler
             });
         });
-
-
-
-
     }
 
     this.removeAttachment = function(id) {
@@ -86,7 +88,40 @@ function MailService() {
         });
     }
 
+    this.preLoadAttachment = function(fileName, content, size) {
+        $.ajax({
+            url: "/rest/mails/" + newMailId + "/attachment/add-preloaded",
+            type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': token,
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+                fileName: fileName,
+                content: content
+            }),
+            success: function(attachmentId, textStatus, jQxhr) {
+                if (attachmentId != '') {
+                    var ulElement = $('#attachments');
+                    var txtHtml  = '<li id="attachment-' + attachmentId + '">\n';
+                    txtHtml += '<a style="color: black;" title="Slet vedhæftning" onclick="mailService.removeAttachment(' + attachmentId + ');"><em class="fa fa-fw fa-remove"></em></a>\n';
+                    txtHtml += '<span>' + fileName + '</span>\n';
+                    txtHtml += '</li>';
+
+                    ulElement.append(txtHtml);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                defaultErrorHandler(jqXHR, textStatus, errorThrown);
+            }
+        });
+    }
+
     this.send = function() {
+        var sendButton = $("#sendButton");
+        sendButton.prop("disabled", true);
+        sendButton.html('<i class="fa fa-spinner fa-spin"></i> Sender...');
+
         var recipient = "";
         var patientName = "";
         var patientCpr = "";
@@ -129,7 +164,11 @@ function MailService() {
                 }
 
             },
-            error: defaultErrorHandler
+            error: function(jqXHR, textStatus, errorThrown) {
+                sendButton.prop("disabled", false);
+                sendButton.html('<i class="fa fa-reply"></i> Send');
+                defaultErrorHandler(jqXHR, textStatus, errorThrown);
+            }
         });
     }
 

@@ -1,28 +1,14 @@
 package dk.digitalidentity.medcommailbox.service;
 
-import static dk.digitalidentity.medcommailbox.event.Events.NOTIFICATION_QUEUE;
-import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getNegativeReceipt;
-import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getNegativeVansReceipt;
-import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getPositiveReceipt;
-
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import dk.digitalidentity.medcommailbox.event.NotificationEvent;
-import dk.digitalidentity.simple_queue.QueueMessage;
-import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.MessageSource;
-import org.springframework.stereotype.Service;
-
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
-import dk.digitalidentity.medcommailbox.dao.model.FailedS3Key;
-import dk.digitalidentity.medcommailbox.dao.model.MedcomLog;
-import dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType;
+import dk.digitalidentity.medcommailbox.event.NotificationEvent;
+import dk.digitalidentity.medcommailbox.model.entity.FailedS3Key;
+import dk.digitalidentity.medcommailbox.model.entity.MedcomLog;
+import dk.digitalidentity.medcommailbox.model.entity.enums.ReceiptType;
 import dk.digitalidentity.medcommailbox.mapper.MedcomMapper;
 import dk.digitalidentity.medcommailbox.service.receivers.MedcomReceiver;
+import dk.digitalidentity.simple_queue.QueueMessage;
+import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.NegativeReceipt;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.NegativeVansReceipt;
@@ -31,6 +17,17 @@ import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import static dk.digitalidentity.medcommailbox.event.Events.NOTIFICATION_QUEUE;
+import static dk.digitalidentity.medcommailbox.util.EmessageUtil.*;
 
 @Slf4j
 @Service
@@ -71,9 +68,11 @@ public class ReceiptHandler {
         });
         getNegativeReceipt(receipt).ifPresent(negativeReceipt -> {
             final NegativeReceipt.OriginalEmessage originalEmessage = negativeReceipt.getOriginalEmessage();
+			final String originalEnvelopeIdentifier = originalEmessage.getOriginalEnvelopeIdentifier();
+			final Optional<MedcomLog> firstByEnvelopeIdentifier = logService.getFirstByEnvelopeIdentifier(originalEnvelopeIdentifier);
             result.setReceiptType(ReceiptType.NEGATIVE);
-            result.setEnvelopeIdentifier(originalEmessage.getOriginalEnvelopeIdentifier());
-            result.setLetterIdentifier(originalEmessage.getOriginalLetters().getFirst().getOriginalLetterIdentifier());
+			result.setEnvelopeIdentifier(originalEnvelopeIdentifier);
+			result.setLetterIdentifier(firstByEnvelopeIdentifier.map(MedcomLog::getLetterIdentifier).orElseThrow());
             result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(originalEmessage.getRefuseText() == null
                     ? originalEmessage.getOriginalLetters().getFirst().getRefuseText()
                     : originalEmessage.getRefuseText()));
@@ -81,9 +80,11 @@ public class ReceiptHandler {
         });
         getNegativeVansReceipt(receipt).ifPresent(negativeVansReceipt -> {
             final NegativeVansReceipt.OriginalEmessage originalEmessage = negativeVansReceipt.getOriginalEmessage();
+			final String originalEnvelopeIdentifier = originalEmessage.getOriginalEnvelopeIdentifier();
+			final Optional<MedcomLog> firstByEnvelopeIdentifier = logService.getFirstByEnvelopeIdentifier(originalEnvelopeIdentifier);
             result.setReceiptType(ReceiptType.NEGATIVE_VANS);
             result.setEnvelopeIdentifier(originalEmessage.getOriginalEnvelopeIdentifier());
-            result.setLetterIdentifier(originalEmessage.getOriginalLetters().getFirst().getOriginalLetterIdentifier());
+			result.setLetterIdentifier(firstByEnvelopeIdentifier.map(MedcomLog::getLetterIdentifier).orElseThrow());
             result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(originalEmessage.getRefuseText() == null
                     ? originalEmessage.getOriginalLetters().getFirst().getRefuseText()
                     : originalEmessage.getRefuseText()));
@@ -117,7 +118,7 @@ public class ReceiptHandler {
     private void sendEmailNotification(final String ean) {
 		eventPublisher.publishEvent(QueueMessage.builder()
 				.queue(NOTIFICATION_QUEUE)
-				.body(JsonSimpleMessage.toJson(NotificationEvent.builder().inboxEan(ean).negative(false).build()))
+				.body(JsonSimpleMessage.toJson(NotificationEvent.builder().inboxEan(ean).negative(true).build()))
 		);
     }
 

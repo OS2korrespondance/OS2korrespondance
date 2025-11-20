@@ -3,15 +3,15 @@ package dk.digitalidentity.medcommailbox.service;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAmount;
 
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
-import dk.digitalidentity.medcommailbox.dao.model.Reference;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dk.digitalidentity.medcommailbox.dao.AuditLogDao;
-import dk.digitalidentity.medcommailbox.dao.model.AuditLog;
-import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
+import dk.digitalidentity.medcommailbox.model.entity.AuditLog;
+import dk.digitalidentity.medcommailbox.model.entity.enums.AuditLogOperation;
 import dk.digitalidentity.medcommailbox.security.SecurityUtil;
 import dk.digitalidentity.medcommailbox.util.DurationUtil;
 import lombok.extern.slf4j.Slf4j;

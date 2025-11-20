@@ -1,7 +1,7 @@
 package dk.digitalidentity.medcommailbox.service;
 
-import dk.digitalidentity.medcommailbox.config.FolderConstants;
-import dk.digitalidentity.medcommailbox.dao.model.FailedS3Key;
+import dk.digitalidentity.medcommailbox.model.entity.FailedS3Key;
+import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.service.receivers.MedcomReceiver;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage;
 import dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.NegativeReceipt;
@@ -20,6 +20,8 @@ import java.util.Objects;
 @Slf4j
 @Component
 public class MedcomReceiveService {
+	@Autowired
+	private MedcomMailboxConfiguration configuration;
     @Autowired
     private Unmarshaller unmarshaller;
     @Autowired
@@ -32,7 +34,7 @@ public class MedcomReceiveService {
     private List<MedcomReceiver> receivers;
 
     public void receive() {
-        final List<String> s3Keys = s3Service.getFileKeysFromFolder(FolderConstants.FOLDER_IN);
+        final List<String> s3Keys = s3Service.getFileKeysFromFolder(configuration.getS3().getInDirectory());
         s3Keys.stream()
                 .filter(s3Key -> s3Key.endsWith(".xml") || s3Key.endsWith(".xml.encrypted"))
                 .filter(s3Key -> receivers.stream().noneMatch(r -> r.isHandled(s3Key)))

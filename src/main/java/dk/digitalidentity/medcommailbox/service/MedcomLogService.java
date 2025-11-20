@@ -5,14 +5,16 @@ import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Optional;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import dk.digitalidentity.medcommailbox.dao.MedcomLogDao;
-import dk.digitalidentity.medcommailbox.dao.model.MedcomLog;
+import dk.digitalidentity.medcommailbox.model.entity.MedcomLog;
 import dk.digitalidentity.medcommailbox.util.DurationUtil;
 import jakarta.transaction.Transactional;
 
+@Slf4j
 @Service
 public class MedcomLogService {
 	
@@ -33,6 +35,10 @@ public class MedcomLogService {
 
 	public Optional<MedcomLog> getByEnvelopeIdentifierAndLetterIdentifier(String envelopeIdentifier, String letterIdentifier) {
 		return logDao.findFirstByEnvelopeIdentifierAndLetterIdentifierOrderByIdDesc(envelopeIdentifier, letterIdentifier);
+	}
+
+	public Optional<MedcomLog> getFirstByEnvelopeIdentifier(String envelopeIdentifier) {
+		return logDao.findFirstByEnvelopeIdentifier(envelopeIdentifier);
 	}
 
 	public MedcomLog getByReceiptS3FileKey(String receiptS3FileKey) {

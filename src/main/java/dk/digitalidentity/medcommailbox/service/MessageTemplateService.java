@@ -1,8 +1,7 @@
 package dk.digitalidentity.medcommailbox.service;
 
 import dk.digitalidentity.medcommailbox.dao.MessageTemplateDao;
-import dk.digitalidentity.medcommailbox.dao.model.MessageTemplate;
-import lombok.RequiredArgsConstructor;
+import dk.digitalidentity.medcommailbox.model.entity.MessageTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;

@@ -69,7 +69,7 @@
 								<select id="identifikationType" class="form-control">
 									<option th:value="${identifierType.name()}" th:text="${#strings.capitalize(identifierType.name())}"
 											th:selected="${identifierType.name() == 'lokationsnummer'}"
-											th:each="identifierType : ${T(dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode).values()}"></option>
+											th:each="identifierType : ${T(dk.digitalidentity.medcommailbox.model.entity.enums.IdentifierCode).values()}"></option>
 								</select>
 							</div>
 						</div>

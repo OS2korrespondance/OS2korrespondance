@@ -1,17 +1,44 @@
-version: '3.3'
 services:
   db:
     image: mariadb:10.6.14
     environment:
-      MARIADB_DATABASE: 'medcom_mailbox'
+      MARIADB_DATABASE: 'os2korrespondance'
       MARIADB_ROOT_PASSWORD: 'Test1234'
     ports:
-      - "3306:3306"
+      - "3307:3306"
     expose:
-      - '3306'
+      - '3307'
     volumes:
       - medbox-db:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
+  os2korrespondance:
+    build: .
+    ports:
+      - "8385:8385"
+    expose:
+      - "8385"
+    environment:
+      spring.datasource.url: "jdbc:mysql://db/os2korrespondance?useSSL=false&serverTimezone=UTC"
+      spring.datasource.username: "root"
+      spring.datasource.password: "Test1234"
+
+      # Replace with your own values
+      server.ssl.enabled: "true"
+      server.ssl.key-store: "/app/security/ssl-dev.pfx"
+      server.ssl.key-store-password: "Test1234"
+      server.ssl.key-password: "Test1234"
+      spring.cloud.aws.credentials.accessKey: ""
+      spring.cloud.aws.credentials.secretKey: ""
+      spring.cloud.aws.region.static: "eu-west-1"
+
+      # Replace with your own values
+      di.saml.sp.entityId: "https://os2korrespondance.dk"
+      di.saml.sp.baseUrl: "https://localhost:8385"
+      di.saml.keystore.location: "file:/app/security/saml-keystore-dev.pfx"
+      di.saml.keystore.password: "Password1234"
+      di.saml.idp.metadataLocation: "url:https://SOME-IDP-URL-GOES-HERE/sso/saml/metadata"
+    volumes:
+      - ./security:/app/security
 
 volumes:
   medbox-db:

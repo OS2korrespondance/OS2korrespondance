@@ -1,6 +1,6 @@
 package dk.digitalidentity.medcommailbox.datatables.model;
 
-import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
+import dk.digitalidentity.medcommailbox.model.entity.enums.AuditLogOperation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -2,7 +2,7 @@ package dk.digitalidentity.medcommailbox.event;
 
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.config.Sender;
-import dk.digitalidentity.medcommailbox.dao.model.InboxSubscriber;
+import dk.digitalidentity.medcommailbox.model.entity.InboxSubscriber;
 import dk.digitalidentity.medcommailbox.service.EmailService;
 import dk.digitalidentity.medcommailbox.service.InboxSubscriberService;
 import dk.digitalidentity.simple_queue.QueueMessage;

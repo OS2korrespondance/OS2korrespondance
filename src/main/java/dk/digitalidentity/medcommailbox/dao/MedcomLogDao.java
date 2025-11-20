@@ -6,11 +6,12 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import dk.digitalidentity.medcommailbox.dao.model.MedcomLog;
+import dk.digitalidentity.medcommailbox.model.entity.MedcomLog;
 
 public interface MedcomLogDao extends JpaRepository<MedcomLog, Long> {
 	Optional<MedcomLog> findByIncommingTrueAndEnvelopeIdentifierAndLetterIdentifier(String envelopeIdentifier, String letterIdentifier);
 	Optional<MedcomLog> findFirstByEnvelopeIdentifierAndLetterIdentifierOrderByIdDesc(String envelopeIdentifier, String letterIdentifier);
+	Optional<MedcomLog> findFirstByEnvelopeIdentifier(final String envelopeIdentifier);
 	MedcomLog findByReceiptS3FileKey(String receiptS3FileKey);
 	List<MedcomLog> findAllByIncommingOrderByIdDesc(boolean incomming);
 	MedcomLog findById(long id);

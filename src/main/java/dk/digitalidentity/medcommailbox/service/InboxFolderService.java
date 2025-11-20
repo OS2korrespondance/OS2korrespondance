@@ -1,8 +1,8 @@
 package dk.digitalidentity.medcommailbox.service;
 
 import dk.digitalidentity.medcommailbox.dao.InboxFolderDao;
-import dk.digitalidentity.medcommailbox.dao.model.InboxFolder;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.InboxFolder;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

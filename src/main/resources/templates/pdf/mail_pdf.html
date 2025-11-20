@@ -24,14 +24,18 @@
         <h2 th:text="'Emne: ' + ${mail.subject}"></h2>
         <div>
             <h5>
-                <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:text="${#temporals.format(mail.sent, 'dd/MM/yyyy HH:mm')}"></span>
-                <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:text="${#temporals.format(mail.received, 'dd/MM/yyyy HH:mm')}"></span>
-                <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:utext="'<strong>Fra:</strong> ' + ${mail.sender.fullOrganisationName}"></span>
-                <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:utext="'<strong>Til:</strong> ' + ${mail.recipient.fullOrganisationName}"></span>
+                <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" th:text="${#temporals.format(mail.sent, 'dd/MM/yyyy HH:mm')}"></span>
+                <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" th:text="${#temporals.format(mail.received, 'dd/MM/yyyy HH:mm')}"></span>
+                <span th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}">
+                    <strong>Fra:</strong> <span th:text="${mail.sender.fullOrganisationName}"></span>
+                </span>
+                <span th:if="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}">
+                    <strong>Til:</strong> <span th:text="${mail.recipient.fullOrganisationName}"></span>
+                </span>
             </h5>
         </div>
-        <p th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:if="${mail.senderDepartmentName != null}"><strong>Afsenders afdelingsnavn: </strong><span th:text="${mail.senderDepartmentName}"></span></p>
-        <p th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.dao.model.enums.Folder).SENT}" th:if="${mail.senderMedicalSpecialityCode != null}"><strong>Afsenders medicinske speciale: </strong><span th:text="${mail.senderMedicalSpecialityCode.displayValue}"></span></p>
+        <p th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" th:if="${mail.senderDepartmentName != null}"><strong>Afsenders afdelingsnavn: </strong><span th:text="${mail.senderDepartmentName}"></span></p>
+        <p th:unless="${mail.originalFolder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" th:if="${mail.senderMedicalSpecialityCode != null}"><strong>Afsenders medicinske speciale: </strong><span th:text="${mail.senderMedicalSpecialityCode.displayValue}"></span></p>
         <p>
             <strong>Patient:</strong>
             <span th:text="${mail.patient.name} + ' (' + ${mail.patient.cpr} + ' - ' + ${mail.patient.episodeOfCareStatusCode.displayValue} + ')'"></span>

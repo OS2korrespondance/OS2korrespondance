@@ -2,7 +2,7 @@ package dk.digitalidentity.medcommailbox.security;
 
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.config.RoleConstants;
-import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
+import dk.digitalidentity.medcommailbox.model.entity.enums.AuditLogOperation;
 import dk.digitalidentity.medcommailbox.service.AuditLogService;
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.SamlLoginPostProcessor;

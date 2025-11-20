@@ -1,7 +1,6 @@
 package dk.digitalidentity.medcommailbox.controller.mvc;
 
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
-import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
 import dk.digitalidentity.medcommailbox.security.RequireAdminAccess;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
 import dk.digitalidentity.medcommailbox.service.InboxSubscriberService;

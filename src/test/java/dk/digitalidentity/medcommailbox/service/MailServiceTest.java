@@ -6,19 +6,24 @@ import dk.digitalidentity.medcommailbox.config.Sender;
 import dk.digitalidentity.medcommailbox.config.JaxbConfiguration;
 import dk.digitalidentity.medcommailbox.dao.BinaryDao;
 import dk.digitalidentity.medcommailbox.dao.MailDao;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
-import dk.digitalidentity.medcommailbox.dao.model.Patient;
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
-import dk.digitalidentity.medcommailbox.dao.model.enums.EpisodeOfCareStatusCode;
-import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
+import dk.digitalidentity.medcommailbox.datatables.MailDatatableDao;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.Patient;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.enums.EpisodeOfCareStatusCode;
+import dk.digitalidentity.medcommailbox.model.entity.enums.IdentifierCode;
 import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
+import dk.digitalidentity.medcommailbox.service.dafolo.ArchiveBinaryService;
+import dk.digitalidentity.medcommailbox.service.dafolo.ArchiveXmlService;
+import dk.digitalidentity.medcommailbox.service.dafolo.ArchiveZipBuilder;
+import dk.digitalidentity.medcommailbox.service.dafolo.FilarkivXmlSerializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thymeleaf.TemplateEngine;
 import org.xml.sax.SAXException;
 
@@ -37,18 +42,28 @@ public class MailServiceTest {
     private MailService mailService;
     @Autowired
     private EmessageMapper emessageMapper;
-    @MockBean
+    @MockitoBean
     private MedcomLogService logServiceMock;
-    @MockBean
+	@MockitoBean
     private MailDao mailDaoMock;
-    @MockBean
+	@MockitoBean
+    private MailDatatableDao mailDatatableDaoMock;
+	@MockitoBean
     private S3Service s3ServiceMock;
-    @MockBean
+	@MockitoBean
     private RecipientService recipientServiceMock;
-    @MockBean
+	@MockitoBean
     private FailedS3KeyService failedS3KeyService;
-    @MockBean
+	@MockitoBean
     private BinaryDao binaryDao;
+	@MockitoBean
+	private ArchiveXmlService archiveXmlServiceMock;
+	@MockitoBean
+	private FilarkivXmlSerializer filarkivXmlSerializerMock;
+	@MockitoBean
+	private ArchiveBinaryService archiveBinaryServiceMock;
+	@MockitoBean
+	private ArchiveZipBuilder archiveZipBuilderMock;
 
     /**
      * This test will simply check that the Mail to Xml conversion works and is schema valid

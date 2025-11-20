@@ -105,7 +105,7 @@
 
 			                <div class="mail-body text-right tooltip-demo d-flex justify-content-between">
 		                        <button type="button" id="saveAsTemplateButton" class="btn btn-secondary" data-toggle="tooltip" data-placement="top" title="Gem som skabelon" onclick="templateService.onSaveTemplateModalOpen()"><i class="fa fa-clipboard"></i> Gem som skabelon</button>
-		                        <button class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Send besked" onclick="mailService.send()"><i class="fa fa-reply"></i> Send</button>
+		                        <button id="sendButton" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Send besked" onclick="mailService.send()"><i class="fa fa-reply"></i> Send</button>
 			                </div>
                 		</div>
             		</div>
@@ -125,6 +125,7 @@
 			const newMailId = [[${id}]];
 			const caseId = [[${caseId}]];
 			const answer = [[${answer}]];
+			const preloadedFiles = [[${preloadedFiles}]];
 			const token = $("meta[name='_csrf']").attr("content");
 			const cprLookupUrl = [[@{/rest/mail/cprlookup/}]]
 			const restUrl = [[@{rest/mail}]]

@@ -2,11 +2,11 @@ package dk.digitalidentity.medcommailbox.controller.mvc;
 
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.config.Sender;
-import dk.digitalidentity.medcommailbox.dao.model.InboxFolder;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
-import dk.digitalidentity.medcommailbox.dao.model.enums.Folder;
-import dk.digitalidentity.medcommailbox.dao.model.enums.Status;
+import dk.digitalidentity.medcommailbox.model.entity.InboxFolder;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Folder;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Status;
 import dk.digitalidentity.medcommailbox.security.RequireUserAccess;
 import dk.digitalidentity.medcommailbox.security.SecurityUtil;
 import dk.digitalidentity.medcommailbox.service.InboxFolderService;
@@ -14,6 +14,7 @@ import dk.digitalidentity.medcommailbox.service.MailService;
 import dk.digitalidentity.medcommailbox.service.MedcomLogService;
 import dk.digitalidentity.medcommailbox.service.MessageTemplateService;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
+import dk.digitalidentity.medcommailbox.service.S3Service;
 import dk.digitalidentity.medcommailbox.session.LandingInfo;
 import dk.digitalidentity.medcommailbox.session.UserSession;
 import jakarta.servlet.http.HttpSession;
@@ -25,12 +26,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import static dk.digitalidentity.medcommailbox.Constants.FOLDER_INBOX_ID;
 import static dk.digitalidentity.medcommailbox.util.NullSafe.nullSafe;
@@ -60,6 +73,8 @@ public class MailController {
 
 	@Autowired
 	private MessageTemplateService messageTemplateService;
+	@Autowired
+	private S3Service s3Service;
 
 	@GetMapping("/mailbox/{folder}")
 	public String getMailbox(Model model, @PathVariable Folder folder, @RequestParam(name = "folder", required = false) Long inboxFolderId, HttpSession httpSession) {
@@ -227,7 +242,7 @@ public class MailController {
 	}
 
 	@GetMapping("/mail/new")
-	public String newMail(Model model) {
+	public String newMail(Model model) throws IOException {
 		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
 
 		Mail newMail = new Mail();
@@ -252,7 +267,37 @@ public class MailController {
 		final List<MessageTemplateNameOnlyDTO> messageTemplates = messageTemplateService.getAllSortedByName().stream()
 				.map(template -> new MessageTemplateNameOnlyDTO(template.getId(), template.getTemplateName()))
 				.toList();
+		String groupId = nullSafe(() -> userSession.getLandingInfo().getGroupId(), "");
+		if (groupId != null && !groupId.isEmpty()) {
+			final String postfix = s3Service.encrypting() ? ".zip.encrypted" : ".zip";
+			byte[] zipBytes = s3Service.downloadFromS3(configuration.getS3().getBinDirectory() + "/" + groupId + postfix);
 
+			if (zipBytes != null && zipBytes.length > 0) {
+				try {
+					List<Map<String, Object>> extractedFiles = unzipFiles(zipBytes);
+
+					// Convert to base64 for frontend
+					List<Map<String, Object>> fileData = new ArrayList<>();
+					for (Map<String, Object> file : extractedFiles) {
+						Map<String, Object> fileInfo = new HashMap<>();
+						fileInfo.put("fileName", (String) file.get("fileName"));
+
+						// Encode the content as base64
+						byte[] fileContent = (byte[]) file.get("content");
+						String base64Content = Base64.getEncoder().encodeToString(fileContent);
+						fileInfo.put("content", base64Content);
+
+						fileInfo.put("size", file.get("size"));
+						fileData.add(fileInfo);
+					}
+
+					model.addAttribute("preloadedFiles", fileData);
+
+				} catch (IOException e) {
+					log.warn("Error extracting files from zip for groupId {}", groupId, e);
+				}
+			}
+		}
 		model.addAttribute("messageTemplates", messageTemplates);
 		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
 		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT, constraints));
@@ -298,6 +343,38 @@ public class MailController {
 				"- - - - - - - - - - - - - - - - - - - - - - - - - - -" + System.lineSeparator() +
 				System.lineSeparator() +
 				originalContent;
+	}
+
+	public List<Map<String, Object>> unzipFiles(byte[] zipBytes) throws IOException {
+		List<Map<String, Object>> files = new ArrayList<>();
+
+		try (ByteArrayInputStream bais = new ByteArrayInputStream(zipBytes);
+				ZipInputStream zis = new ZipInputStream(bais)) {
+
+			ZipEntry entry;
+			while ((entry = zis.getNextEntry()) != null) {
+				if (entry.isDirectory()) {
+					continue;
+				}
+
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				byte[] buffer = new byte[1024];
+				int len;
+				while ((len = zis.read(buffer)) > 0) {
+					baos.write(buffer, 0, len);
+				}
+
+				Map<String, Object> file = new HashMap<>();
+				file.put("fileName", entry.getName());
+				file.put("content", baos.toByteArray());
+				file.put("size", entry.getSize());
+				files.add(file);
+
+				zis.closeEntry();
+			}
+		}
+
+		return files;
 	}
 
 }

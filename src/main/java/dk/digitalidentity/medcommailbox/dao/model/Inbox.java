@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -36,7 +37,8 @@ public class Inbox {
 	@Column
 	private boolean negativeReceiptNotification;
 
+	@Builder.Default
 	@OneToMany(mappedBy = "inbox", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	private Set<InboxSubscriber> subscribers;
+	private Set<InboxSubscriber> subscribers = new HashSet<>();
 
 }

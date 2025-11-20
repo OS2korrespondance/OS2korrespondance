@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
 
 @Configuration
 @EnableJpaRepositories(basePackages = { "dk.digitalidentity.medcommailbox.dao" }, repositoryFactoryBeanClass = JpaRepositoryFactoryBean.class)
-@EntityScan(basePackages = "dk.digitalidentity.medcommailbox.dao.model")
+@EntityScan(basePackages = "dk.digitalidentity.medcommailbox.model.entity")
 public class JpaConfiguration {
 
 }

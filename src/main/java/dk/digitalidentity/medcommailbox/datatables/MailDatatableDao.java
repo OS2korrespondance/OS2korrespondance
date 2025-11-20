@@ -1,6 +1,6 @@
 package dk.digitalidentity.medcommailbox.datatables;
 
-import dk.digitalidentity.medcommailbox.dao.model.enums.Folder;
+import dk.digitalidentity.medcommailbox.model.entity.enums.Folder;
 import dk.digitalidentity.medcommailbox.datatables.model.MailboxDatatableDTO;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Root;

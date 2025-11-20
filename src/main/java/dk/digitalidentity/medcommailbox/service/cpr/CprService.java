@@ -1,7 +1,7 @@
 package dk.digitalidentity.medcommailbox.service.cpr;
 
 
-import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
+import dk.digitalidentity.medcommailbox.model.entity.enums.AuditLogOperation;
 import dk.digitalidentity.medcommailbox.service.AuditLogService;
 import dk.digitalidentity.medcommailbox.service.cpr.dto.CPRServiceLookupDTO;
 import dk.digitalidentity.medcommailbox.service.cpr.dto.CprLookupDto;

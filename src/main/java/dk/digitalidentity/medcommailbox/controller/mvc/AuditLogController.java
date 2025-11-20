@@ -1,7 +1,7 @@
 package dk.digitalidentity.medcommailbox.controller.mvc;
 
-import dk.digitalidentity.medcommailbox.dao.model.AuditLog;
-import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
+import dk.digitalidentity.medcommailbox.model.entity.AuditLog;
+import dk.digitalidentity.medcommailbox.model.entity.enums.AuditLogOperation;
 import dk.digitalidentity.medcommailbox.security.RequireAdminAccess;
 import dk.digitalidentity.medcommailbox.service.AuditLogService;
 import org.springframework.beans.factory.annotation.Autowired;

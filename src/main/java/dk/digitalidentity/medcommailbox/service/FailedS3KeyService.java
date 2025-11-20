@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import dk.digitalidentity.medcommailbox.dao.FailedS3KeyDao;
-import dk.digitalidentity.medcommailbox.dao.model.FailedS3Key;
+import dk.digitalidentity.medcommailbox.model.entity.FailedS3Key;
 
 @Service
 public class FailedS3KeyService {

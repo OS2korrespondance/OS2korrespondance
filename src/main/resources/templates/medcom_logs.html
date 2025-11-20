@@ -31,8 +31,8 @@
 									</thead>
 					                <tbody>
 						                <tr th:each="log: ${logsOutgoing}">
-						                	<td th:if="${log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).POSITIVE && log.mailTts != null}" title="Positiv kvittering"><em class="fa-fw fa fa-circle" style="color: green; font-size: 20px;"></em></td>
-								        	<td th:if="${(log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).NEGATIVE || log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).NEGATIVE_VANS) && log.mailTts != null}" title="Negativ kvittering"><em class="fa-fw fa fa-circle" style="color: red; font-size: 20px;"></em></td>
+						                	<td th:if="${log.receiptType == T(dk.digitalidentity.medcommailbox.model.entity.enums.ReceiptType).POSITIVE && log.mailTts != null}" title="Positiv kvittering"><em class="fa-fw fa fa-circle" style="color: green; font-size: 20px;"></em></td>
+								        	<td th:if="${(log.receiptType == T(dk.digitalidentity.medcommailbox.model.entity.enums.ReceiptType).NEGATIVE || log.receiptType == T(dk.digitalidentity.medcommailbox.model.entity.enums.ReceiptType).NEGATIVE_VANS) && log.mailTts != null}" title="Negativ kvittering"><em class="fa-fw fa fa-circle" style="color: red; font-size: 20px;"></em></td>
 								        	<td th:if="${log.receiptType !=null && log.mailTts == null}" title="Ukendt kvittering"><em class="fa-fw fa fa-exclamation-triangle" style="color: orange; font-size: 20px;"></em></td>
 								        	<td th:if="${log.receiptType == null}" title="Ingen kvittering modtaget"><em class="fa-fw fa fa-circle" style="color: grey; font-size: 20px;"></em></td>
 						                    <td>
@@ -68,8 +68,8 @@
 									</thead>
 					                <tbody>
 						                <tr th:each="log: ${logsIncomming}">
-						                	<td th:if="${log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).POSITIVE}" title="Positiv kvittering"><em class="fa-fw fa fa-circle" style="color: green; font-size: 20px;"></em></td>
-								        	<td th:if="${log.receiptType == T(dk.digitalidentity.medcommailbox.dao.model.enums.ReceiptType).NEGATIVE}" title="Negativ kvittering"><em class="fa-fw fa fa-circle" style="color: red; font-size: 20px;"></em></td>
+						                	<td th:if="${log.receiptType == T(dk.digitalidentity.medcommailbox.model.entity.enums.ReceiptType).POSITIVE}" title="Positiv kvittering"><em class="fa-fw fa fa-circle" style="color: green; font-size: 20px;"></em></td>
+								        	<td th:if="${log.receiptType == T(dk.digitalidentity.medcommailbox.model.entity.enums.ReceiptType).NEGATIVE}" title="Negativ kvittering"><em class="fa-fw fa fa-circle" style="color: red; font-size: 20px;"></em></td>
 								        	<td th:if="${log.receiptType == null}" title="Ingen kvittering sendt"><em class="fa-fw fa fa-circle" style="color: grey; font-size: 20px;"></em></td>
 						                    <td>
 						                    	<span th:if="${log.mailTts != null}" th:text="${#temporals.format(log.mailTts, 'yyyy-MM-dd HH:mm')}"></span>

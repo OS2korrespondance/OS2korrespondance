@@ -1,9 +1,9 @@
 package dk.digitalidentity.medcommailbox.controller.mvc;
 
-import dk.digitalidentity.medcommailbox.dao.model.Binary;
-import dk.digitalidentity.medcommailbox.dao.model.Mail;
-import dk.digitalidentity.medcommailbox.dao.model.Reference;
-import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
+import dk.digitalidentity.medcommailbox.model.entity.Binary;
+import dk.digitalidentity.medcommailbox.model.entity.Mail;
+import dk.digitalidentity.medcommailbox.model.entity.Reference;
+import dk.digitalidentity.medcommailbox.model.entity.enums.AuditLogOperation;
 import dk.digitalidentity.medcommailbox.security.RequireUserAccess;
 import dk.digitalidentity.medcommailbox.service.AuditLogService;
 import dk.digitalidentity.medcommailbox.service.BinaryService;
@@ -11,7 +11,6 @@ import dk.digitalidentity.medcommailbox.service.MailService;
 import dk.digitalidentity.medcommailbox.service.S3Service;
 import dk.digitalidentity.medcommailbox.util.MedcomContentType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

@@ -1,10 +1,9 @@
 package dk.digitalidentity.medcommailbox.controller.rest;
 
-import dk.digitalidentity.medcommailbox.dao.model.Inbox;
-import dk.digitalidentity.medcommailbox.dao.model.InboxSubscriber;
-import dk.digitalidentity.medcommailbox.dao.model.Recipient;
-import dk.digitalidentity.medcommailbox.dao.model.enums.AuditLogOperation;
-import dk.digitalidentity.medcommailbox.dao.model.enums.IdentifierCode;
+import dk.digitalidentity.medcommailbox.model.entity.Inbox;
+import dk.digitalidentity.medcommailbox.model.entity.Recipient;
+import dk.digitalidentity.medcommailbox.model.entity.enums.AuditLogOperation;
+import dk.digitalidentity.medcommailbox.model.entity.enums.IdentifierCode;
 import dk.digitalidentity.medcommailbox.security.RequireAdminAccess;
 import dk.digitalidentity.medcommailbox.service.AuditLogService;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
