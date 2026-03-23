@@ -5,7 +5,7 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
-## [1.4.0] - 2026-03-23
+## [1.4.1] - 2026-03-23
 Release 2026r1
 
 ### Added
