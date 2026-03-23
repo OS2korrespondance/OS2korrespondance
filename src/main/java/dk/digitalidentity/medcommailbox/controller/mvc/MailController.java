@@ -2,6 +2,7 @@ package dk.digitalidentity.medcommailbox.controller.mvc;
 
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.config.Sender;
+import dk.digitalidentity.medcommailbox.model.entity.Inbox;
 import dk.digitalidentity.medcommailbox.model.entity.InboxFolder;
 import dk.digitalidentity.medcommailbox.model.entity.Mail;
 import dk.digitalidentity.medcommailbox.model.entity.Recipient;
@@ -10,6 +11,7 @@ import dk.digitalidentity.medcommailbox.model.entity.enums.Status;
 import dk.digitalidentity.medcommailbox.security.RequireUserAccess;
 import dk.digitalidentity.medcommailbox.security.SecurityUtil;
 import dk.digitalidentity.medcommailbox.service.InboxFolderService;
+import dk.digitalidentity.medcommailbox.service.InboxSubscriberService;
 import dk.digitalidentity.medcommailbox.service.MailService;
 import dk.digitalidentity.medcommailbox.service.MedcomLogService;
 import dk.digitalidentity.medcommailbox.service.MessageTemplateService;
@@ -28,9 +30,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -43,7 +44,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import static dk.digitalidentity.medcommailbox.Constants.FOLDER_INBOX_ID;
 import static dk.digitalidentity.medcommailbox.util.NullSafe.nullSafe;
@@ -75,6 +75,8 @@ public class MailController {
 	private MessageTemplateService messageTemplateService;
 	@Autowired
 	private S3Service s3Service;
+	@Autowired
+	private InboxSubscriberService inboxSubscriberService;
 
 	@GetMapping("/mailbox/{folder}")
 	public String getMailbox(Model model, @PathVariable Folder folder, @RequestParam(name = "folder", required = false) Long inboxFolderId, HttpSession httpSession) {
@@ -107,11 +109,12 @@ public class MailController {
 		}
 
 		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
-		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT, constraints));
+		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceiptAndReadFalse(Folder.SENT, constraints));
 		model.addAttribute("folderCount", mailService.getCountByFolderAndNotDraft(folder, inboxFolder, constraints));
 		model.addAttribute("folder", folder);
 		model.addAttribute("inboxFolder", inboxFolder);
 		model.addAttribute("inboxFolders", inboxFolderService.findAll());
+		model.addAttribute("daysBeforeDeletion", configuration.getDaysBeforeDeletion());
 
 		return "mailbox";
 	}
@@ -169,7 +172,7 @@ public class MailController {
 
 		model.addAttribute("messageTemplates", messageTemplates);
 		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
-		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT, constraints));
+		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceiptAndReadFalse(Folder.SENT, constraints));
 		model.addAttribute("id", newMail.getId());
 		model.addAttribute("answer", true);
 		model.addAttribute("patient", newMail.getPatient());
@@ -223,7 +226,7 @@ public class MailController {
 
 		model.addAttribute("messageTemplates", messageTemplates);
 		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
-		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT, constraints));
+		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceiptAndReadFalse(Folder.SENT, constraints));
 		model.addAttribute("id", newMail.getId());
 		model.addAttribute("answer", false);
 		model.addAttribute("patient", newMail.getPatient());
@@ -242,7 +245,7 @@ public class MailController {
 	}
 
 	@GetMapping("/mail/new")
-	public String newMail(Model model) throws IOException {
+	public String newMail(Model model, HttpSession httpSession) throws IOException {
 		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
 
 		Mail newMail = new Mail();
@@ -270,7 +273,9 @@ public class MailController {
 		String groupId = nullSafe(() -> userSession.getLandingInfo().getGroupId(), "");
 		if (groupId != null && !groupId.isEmpty()) {
 			final String postfix = s3Service.encrypting() ? ".zip.encrypted" : ".zip";
-			byte[] zipBytes = s3Service.downloadFromS3(configuration.getS3().getBinDirectory() + "/" + groupId + postfix);
+			final String s3Key = configuration.getS3().getBinDirectory() + "/" + groupId + postfix;
+
+			byte[] zipBytes = s3Service.downloadFromS3(s3Key);
 
 			if (zipBytes != null && zipBytes.length > 0) {
 				try {
@@ -292,21 +297,27 @@ public class MailController {
 					}
 
 					model.addAttribute("preloadedFiles", fileData);
-
+					model.addAttribute("expiredFile", false);
 				} catch (IOException e) {
 					log.warn("Error extracting files from zip for groupId {}", groupId, e);
 				}
+			} else {
+				model.addAttribute("expiredFile", true);
 			}
 		}
+		Object selectedInbox = httpSession.getAttribute("selectedInbox");
 		model.addAttribute("messageTemplates", messageTemplates);
 		model.addAttribute("inboxUnreadCount", mailService.getUnreadForRootFolder(Folder.INBOX, constraints));
-		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceipt(Folder.SENT, constraints));
+		model.addAttribute("negativeReceiptCount", mailService.getCountByFolderAndReceivedNegativeReceiptAndReadFalse(Folder.SENT, constraints));
 		model.addAttribute("id", newMail.getId());
 		model.addAttribute("answer", false);
 		model.addAttribute("recipients", allRecipients);
 		model.addAttribute("selectedRecipient", nullSafe(() -> allRecipients.stream().filter(r -> userSession.getLandingInfo().getReceiverEan().equals(r.getEanIdentifier())).findFirst().orElse(null), null));
 		model.addAttribute("senders", senders);
-		model.addAttribute("selectedSender", nullSafe(() -> senders.stream().filter(s -> userSession.getLandingInfo().getSenderEan().equals(s.getEanIdentifier())).findFirst().orElse(null), null));
+		model.addAttribute("selectedSender", selectedInbox != null
+				? senders.stream().filter(s -> selectedInbox.equals(s.getIdentifier())).findFirst().orElse(null)
+				: nullSafe(() -> senders.stream().filter(s -> userSession.getLandingInfo().getSenderEan().equals(s.getEanIdentifier())).findFirst().orElse(null), null));
+
 		model.addAttribute("patientName", nullSafe(() -> userSession.getLandingInfo().getPatientName(), ""));
 		model.addAttribute("patientCpr", nullSafe(() -> userSession.getLandingInfo().getPatientCpr(), ""));
 		model.addAttribute("subject", nullSafe(() -> userSession.getLandingInfo().getSubject(), ""));
@@ -375,6 +386,31 @@ public class MailController {
 		}
 
 		return files;
+	}
+
+	record InboxAutoReplyDTO(String eanIdentifier,
+			String organisationName,
+			boolean autoReplyEnabled,
+			String autoReplySubject,
+			String autoReplyMessage,
+			LocalDate autoReplyStartDate,
+			LocalDate autoReplyEndDate) {}
+
+	@GetMapping("/mailbox/autoreply")
+	public String getAutoReplySettings(Model model) {
+		Set<String> constraints = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
+		List<InboxAutoReplyDTO> inboxes = configuration.getSenders().stream()
+				.filter(s -> constraints.isEmpty() || constraints.contains(s.getEanIdentifier()))
+				.map(s -> {
+					final Inbox inbox = inboxSubscriberService.getOrCreateInbox(s.getEanIdentifier());
+					return new InboxAutoReplyDTO(s.getEanIdentifier(), s.getOrganisationName(),
+							inbox.isAutoReplyEnabled(), inbox.getAutoReplySubject(), inbox.getAutoReplyMessage(),
+							inbox.getAutoReplyStartDate(), inbox.getAutoReplyEndDate());
+				})
+				.toList();
+		model.addAttribute("inboxes", inboxes);
+		model.addAttribute("autoReplyUrl", "/rest/mail/settings/setAutoReply");
+		return "mailbox/autoreply";
 	}
 
 }

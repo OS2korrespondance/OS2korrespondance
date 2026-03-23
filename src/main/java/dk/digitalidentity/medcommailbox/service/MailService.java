@@ -191,11 +191,11 @@ public class MailService {
 		}
 	}
 
-	public long getCountByFolderAndReceivedNegativeReceipt(final Folder folder, final Set<String> constrainedLocationNumbers) {
+	public long getCountByFolderAndReceivedNegativeReceiptAndReadFalse(final Folder folder, final Set<String> constrainedLocationNumbers) {
 		if (constrainedLocationNumbers == null || constrainedLocationNumbers.isEmpty()) {
-			return mailDao.countByFolderAndDraftFalseAndReceivedNegativeReceiptTrue(folder);
+			return mailDao.countByFolderAndDraftFalseAndReceivedNegativeReceiptTrueAndReadFalse(folder);
 		} else {
-			return mailDao.countByFolderAndDraftFalseAndReceivedNegativeReceiptTrue(folder, constrainedLocationNumbers);
+			return mailDao.countByFolderAndDraftFalseAndReceivedNegativeReceiptTrueAndReadFalse(folder, constrainedLocationNumbers);
 		}
 	}
 
@@ -242,9 +242,17 @@ public class MailService {
 		try {
 			String html = getPdfHtml(mail);
 			byte[] pdf = convertHtmlToPdf(html);
-//			s3Service.upload(config.getS3().getArchiveDirectory(), name + ".pdf", pdf);
-			s3Service.upload(config.getS3().getArchiveDirectory(), name + ".xml", xml);
-			createAndUploadZipArchive(mail, name, pdf);
+
+			if (config.isOldArchiveStrategy()) {
+				// Old strategy: upload PDF and XML separately
+				s3Service.upload(config.getS3().getArchiveDirectory(), name + ".pdf", pdf);
+				s3Service.upload(config.getS3().getArchiveDirectory(), name + ".xml", xml);
+			}
+			else {
+				// New strategy: upload ZIP and XML
+				createAndUploadZipArchive(mail, name, pdf);
+				s3Service.upload(config.getS3().getArchiveDirectory(), name + ".xml", xml);
+			}
 
 		} catch (Exception e) {
 			log.error("Could not upload copy to archive for mail with id {}", mail.getId(), e);

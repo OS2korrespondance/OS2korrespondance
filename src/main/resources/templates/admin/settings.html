@@ -18,7 +18,17 @@
                             </div>
 
                             <div id="emailConfiguration" class="ibox-content">
-                            
+
+                            </div>
+                        </div>
+
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5>
+                                    <em class="fa fa-reply"></em> &nbsp; Automatisk svar
+                                </h5>
+                            </div>
+                            <div id="autoReplyConfiguration" class="ibox-content">
                             </div>
                         </div>
                     </div>
@@ -85,8 +95,18 @@
 
         $(document).ready(function () {
             loadDataTable();
+            loadAutoReplyConfig();
         });
-        
+
+        function loadAutoReplyConfig() {
+            $('body').getThen('/admin/settings/autoreplyconfig').then((htmlContent) => {
+                $('#autoReplyConfiguration').html($(htmlContent).find("#autoReplyConfiguration"));
+                $('.i-checks').iCheck({
+                    checkboxClass: 'icheckbox_square-green'
+                });
+            });
+        }
+
         function loadDataTable() {
             $('body').getThen('/admin/settings/emailconfig').then((htmlContent) => {
                 $('#emailConfiguration').html($(htmlContent).find("#emailConfiguration"));
@@ -274,5 +294,6 @@
 
         /*]]>*/
     </script>
+    <script th:src="@{/js/auto-reply.js}"></script>
 </body>
 </html>

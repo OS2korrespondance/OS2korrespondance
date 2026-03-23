@@ -37,4 +37,5 @@ public class MedcomMailboxConfiguration {
 	private boolean downloadAsPdf = true;
 	@NestedConfigurationProperty
 	private SwaggerConfiguration swagger = new SwaggerConfiguration();
+	private boolean oldArchiveStrategy = false;
 }

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header}"></head>
+<body class="top-navigation">
+<div id="wrapper">
+    <div id="page-wrapper" class="gray-bg">
+        <div th:replace="~{fragments/topbar :: topbar(page=receipt)}"></div>
+
+        <div class="wrapper wrapper-content">
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="col-md-4">
+                    <div class="ibox">
+
+                        <div class="ibox-title text-center">
+                            <h3><em class="fa fa-check-circle text-navy"></em> &nbsp; Besked sendt!</h3>
+                        </div>
+
+                        <div class="ibox-content text-center" th:if="${message != null}">
+                            <div class="m-t-md m-b-md">
+                                <p class="text-muted m-b-xs"><strong>Emne</strong></p>
+                                <p th:text="${message.subject} ?: 'Intet emne'">Intet emne</p>
+                            </div>
+
+                            <hr/>
+
+                            <div class="m-t-md m-b-md">
+                                <p class="text-muted m-b-xs"><strong>Sendt af</strong></p>
+
+                                <p th:text="${message.sender} ?: 'Ukendt afsender'">Ukendt afsender</p>
+                            </div>
+
+                            <hr/>
+
+                            <div class="m-t-md m-b-md">
+                                <p class="text-muted m-b-xs"><strong>Tidspunkt</strong></p>
+                                <p th:text="${message.sentDate() != null} ? ${#temporals.format(message.sentDate(), 'yyyy-MM-dd HH:mm')} : '--'">--</p>
+                            </div>
+
+                            <hr/>
+
+                            <div class="m-t-md m-b-md">
+                                <p class="text-muted m-b-xs"><strong>Modtager</strong></p>
+                                <span class="label label-primary" th:text="${message.recipient} ?: 'Ukendt modtager'">Ukendt modtager</span>
+                            </div>
+
+                            <hr/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

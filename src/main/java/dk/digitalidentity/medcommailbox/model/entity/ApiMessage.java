@@ -8,8 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -30,4 +31,7 @@ public class ApiMessage {
 	@Column
 	private String groupId;
 
+	@Column
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 }

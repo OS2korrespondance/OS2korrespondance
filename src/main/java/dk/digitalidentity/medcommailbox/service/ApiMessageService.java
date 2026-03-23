@@ -9,12 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ApiMessageService {
-
 	private final ApiMessageDao apiMessageDao;
 	private final S3Service s3Service;
 	private final MedcomMailboxConfiguration configuration;
@@ -33,7 +34,11 @@ public class ApiMessageService {
 
 	public byte[] getExisting(String groupId) {
 		try {
-			return s3Service.downloadBytes(configuration.getS3().getBinDirectory() + "/" + groupId + ".zip");
+			String key = configuration.getS3().getBinDirectory() + "/" + groupId + ".zip";
+			if (s3Service.encrypting()) {
+				key += ".encrypted";
+			}
+			return s3Service.downloadBytes(key);
 		}
 		catch (IOException e) {
 			log.error("Could not download file from S3: " + e.getMessage());
@@ -73,5 +78,20 @@ public class ApiMessageService {
 		log.debug("Updated ApiMessage with id: {} - new total size: {}", updated.getId(), updated.getFileSize());
 
 		return updated;
+	}
+
+	public void deleteExpiredMessaged() {
+		List<ApiMessage> expiredMessages = apiMessageDao.findByCreatedAtBefore(LocalDateTime.now().minusHours(1));
+		log.debug("Deleting a total of {} expired messages!", expiredMessages.size());
+
+		expiredMessages.forEach(message -> {
+			try {
+				s3Service.delete(configuration.getS3().getBinDirectory(), message.getGroupId() + ".zip");
+				delete(message);
+			}
+			catch (Exception e) {
+				log.error("Could not delete expired message from S3: " + e.getMessage());
+			}
+		});
 	}
 }

@@ -94,6 +94,7 @@
 							<th:block th:if="${@medcomMailboxConfiguration.isAllowAttachments()}">
 								<div class="col-lg-12" style="margin-top: 20px;">
 									<h3>Vedhæftede filer:</h3>
+                                    <p style="color: red" th:if="${expiredFile}">Filen er blevet slettet eller er udløbet. Start venligst forfra</p>
 									<form id="uploadAttachmentForm" enctype="multipart/form-data" name="attachment">
 										<button class="btn btn-white" style="margin-bottom: 20px;" onclick="document.getElementById('fileUpload').click(); return false;"><i class="fa fa-paperclip"></i> Vedhæft fil</button>
 										<input type="file" name="file" id="fileUpload" style="display: none;"></input>

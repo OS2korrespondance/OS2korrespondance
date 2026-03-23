@@ -5,6 +5,17 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
+## [1.4.0] - 2026-03-23
+Release 2026r1
+
+### Added
+- [KORRES-37](https://os2web.atlassian.net/browse/KORRES-37) Mulighed for at se hvilke beskeder, der er besvaret
+- [KORRES-44](https://os2web.atlassian.net/browse/KORRES-44) Ændringer til notifikation (de røde tal)
+- [KORRES-46](https://os2web.atlassian.net/browse/KORRES-46) Autosvar
+- [KORRES-47](https://os2web.atlassian.net/browse/KORRES-47) Slette/flytte flere beskeder på én gang
+- [KORRES-51](https://os2web.atlassian.net/browse/KORRES-51) Sortering af modtagere i alfabetisk orden og mulighed for at kunne søge på modtagere
+- [KORRES-54](https://os2web.atlassian.net/browse/KORRES-54) Landingsside efter sendt besked
+
 ## [1.4.0] - 2025-11-20
 Release 2025r3
 

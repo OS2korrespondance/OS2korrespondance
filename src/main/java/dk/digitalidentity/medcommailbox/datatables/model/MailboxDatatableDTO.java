@@ -57,4 +57,7 @@ public class MailboxDatatableDTO {
 
 	@Column
 	private String patientName;
+
+	@Column
+	private boolean replied;
 }
