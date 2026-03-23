@@ -8,11 +8,14 @@ import dk.digitalidentity.medcommailbox.security.RequireAdminAccess;
 import dk.digitalidentity.medcommailbox.service.AuditLogService;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
 import dk.digitalidentity.medcommailbox.service.InboxSubscriberService;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import dk.digitalidentity.medcommailbox.controller.rest.dto.AutoReplyForm;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,6 +128,22 @@ public class AdminRestController {
 	public ResponseEntity<?> setNegativeReceiptNotification(@Valid @RequestBody NegativeReceiptNotifyForm form) {
         Inbox inbox = subscriberService.getOrCreateInbox(form.inboxEan);
         inbox.setNegativeReceiptNotification(form.value);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@Transactional
+	@ResponseBody
+	@PostMapping("/rest/admin/settings/setAutoReply")
+	public ResponseEntity<?> setAutoReply(@Valid @RequestBody AutoReplyForm form) {
+		if (form.startDate() != null && form.endDate() != null && form.endDate().isBefore(form.startDate())) {
+			return new ResponseEntity<>("Slutdato må ikke være før startdato", HttpStatus.BAD_REQUEST);
+		}
+		Inbox inbox = subscriberService.getOrCreateInbox(form.inboxEan());
+		inbox.setAutoReplyEnabled(form.enabled());
+		inbox.setAutoReplySubject(form.subject());
+		inbox.setAutoReplyMessage(form.message());
+		inbox.setAutoReplyStartDate(form.startDate());
+		inbox.setAutoReplyEndDate(form.endDate());
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 

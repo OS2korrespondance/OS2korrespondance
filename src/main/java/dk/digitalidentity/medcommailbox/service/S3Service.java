@@ -100,20 +100,41 @@ public class S3Service {
 	}
 
 	/**
-	 * @throws ResponseStatusException if an error happens during download
-	 * You may need to make sure the groupId has the right FolderConstant prefix applied to it, otherwise it will try to find the file in root of the bucket
 	 */
 	public byte[] downloadFromS3(String groupId) {
-		log.info("Key: " + groupId);
-		byte[] fileContent;
+		final String bucket = config.getS3().getBucketName();
+		// This is simply a check to see if the file exists, so we dont make a call to download without an element being present
 		try {
-			fileContent = downloadBytes(groupId);
-		} catch (IOException e) {
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+			s3Client.headObject(HeadObjectRequest.builder()
+					.bucket(bucket)
+					.key(groupId)
+					.build());
+		} catch (S3Exception e) {
+			log.warn("File with key {} not found, it may have been deleted or it expired", groupId);
+			return null;
 		}
-		return fileContent;
+		try {
+			return downloadFile(groupId, bucket);
+		}
+		catch (Exception ex) {
+			return null;
+		}
 	}
-	
+
+	private byte[] downloadFile(String groupId, String bucket) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+		final ResponseInputStream<GetObjectResponse> response = s3Client.getObject(GetObjectRequest.builder()
+				.bucket(bucket)
+				.key(groupId)
+				.build());
+		byte[] readBytes = response.readAllBytes();
+		if (groupId.endsWith(".encrypted") && secretKeySpec != null) {
+			return decrypt(readBytes);
+		} else if (groupId.endsWith(".encrypted")) {
+			throw new RuntimeException("Cannot decrypt message encryption key missing, key=" + groupId);
+		}
+		return readBytes;
+	}
+
 	@SneakyThrows
     public byte[] downloadBytes(String key) throws IOException {
 		final String bucket = config.getS3().getBucketName();
@@ -126,18 +147,8 @@ public class S3Service {
 			log.error("Error while downloading file from S3, filename: " + key, e);
 			return null;
 		}
-		final ResponseInputStream<GetObjectResponse> response = s3Client.getObject(GetObjectRequest.builder()
-				.bucket(bucket)
-				.key(key)
-				.build());
-		byte[] readBytes = response.readAllBytes();
-		if (key.endsWith(".encrypted") && secretKeySpec != null) {
-			return decrypt(readBytes);
-		} else if (key.endsWith(".encrypted")) {
-			throw new RuntimeException("Cannot decrypt message encryption key missing, key=" + key);
-		}
-		return readBytes;
-    }
+		return downloadFile(key, bucket);
+	}
 
 	private byte[] decrypt(byte[] readBytes) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IOException {
 		Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
@@ -168,6 +179,11 @@ public class S3Service {
 				.bucket(config.getS3().getBucketName())
 				.key(key)
 				.build());
+	}
+
+	public void delete(String folder, String filename) {
+		String key = folder + "/" + filename + (secretKeySpec != null ? ".encrypted" : "");
+		delete(key);
 	}
 
 }

@@ -42,6 +42,11 @@
                             Log
                         </a>
                     </li>
+                    <li th:class="${page != null && #strings.startsWith(page, 'autoreply')} ? 'active' : ''">
+                        <a th:href="@{/mailbox/autoreply}">
+                            Automatisk svar
+                        </a>
+                    </li>
                     <li sec:authorize="hasRole('ROLE_ADMIN')" th:class="${page != null && #strings.startsWith(page, 'recipients')} ? 'active' : ''">
                         <a th:href="@{/admin/recipients}">
                             Modtagere

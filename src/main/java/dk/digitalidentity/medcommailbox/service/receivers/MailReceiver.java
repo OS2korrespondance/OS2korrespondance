@@ -7,12 +7,15 @@ import static dk.digitalidentity.medcommailbox.util.EmessageUtil.getClinicalEmai
 
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
+import dk.digitalidentity.medcommailbox.config.Sender;
 import dk.digitalidentity.medcommailbox.event.NotificationEvent;
+import dk.digitalidentity.medcommailbox.model.entity.Inbox;
 import dk.digitalidentity.simple_queue.QueueMessage;
 import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
 import org.apache.commons.lang3.StringUtils;
@@ -33,8 +36,10 @@ import dk.digitalidentity.medcommailbox.model.entity.enums.Status;
 import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
 import dk.digitalidentity.medcommailbox.service.BinaryService;
 import dk.digitalidentity.medcommailbox.service.FailedS3KeyService;
+import dk.digitalidentity.medcommailbox.service.InboxSubscriberService;
 import dk.digitalidentity.medcommailbox.service.MailService;
 import dk.digitalidentity.medcommailbox.service.MedcomLogService;
+import dk.digitalidentity.medcommailbox.service.MedcomSenderService;
 import dk.digitalidentity.medcommailbox.service.ReceiptHandler;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
 import dk.digitalidentity.medcommailbox.service.S3Service;
@@ -73,6 +78,10 @@ public class MailReceiver implements MedcomReceiver {
     private BinaryService binaryService;
 	@Autowired
 	private ApplicationEventPublisher eventPublisher;
+	@Autowired
+	private InboxSubscriberService subscriberService;
+	@Autowired
+	private MedcomSenderService medcomSenderService;
 
     @Override
     public boolean isHandled(final String s3Key) {
@@ -204,6 +213,11 @@ public class MailReceiver implements MedcomReceiver {
         mailService.toArchive(savedMail, fileName, medcomXml.getFileContents());
 
 		final String receiverEan = clinicalEmail.getReceiver().getEANIdentifier();
+		final Inbox inbox = subscriberService.getOrCreateInbox(receiverEan);
+		if (isAutoReplyActive(inbox)) {
+			log.info("Sending auto reply");
+			sendAutoReply(savedMail, inbox, receiverEan);
+		}
 		eventPublisher.publishEvent(QueueMessage.builder()
 				.queue(NOTIFICATION_QUEUE)
 				.body(JsonSimpleMessage.toJson(NotificationEvent.builder().inboxEan(receiverEan).negative(false).build()))
@@ -350,6 +364,47 @@ public class MailReceiver implements MedcomReceiver {
         existingLog.setReceiptType(ReceiptType.NEGATIVE);
         logService.save(existingLog);
     }
+
+	private boolean isAutoReplyActive(Inbox inbox) {
+		if (!inbox.isAutoReplyEnabled()) {
+			return false;
+		}
+		LocalDate today = LocalDate.now();
+		if (inbox.getAutoReplyStartDate() != null && today.isBefore(inbox.getAutoReplyStartDate())) {
+			return false;
+		}
+		return inbox.getAutoReplyEndDate() == null || !today.isAfter(inbox.getAutoReplyEndDate());
+	}
+
+	private void sendAutoReply(Mail originalMail, Inbox inbox, String receiverEan) {
+		try {
+			final Sender configSender = config.getSenders().stream()
+					.filter(s -> s.getEanIdentifier().equals(receiverEan))
+					.findFirst().orElse(null);
+			if (configSender == null) {
+				log.error("The receiver of the auto reply could not be found, receiver: {}", receiverEan);
+				return;
+			}
+			Mail reply = new Mail();
+			reply.setDraft(false);
+			reply.setFolder(Folder.SENT);
+			reply.setStatus(Status.DONE);
+			reply.setPatient(originalMail.getPatient());
+			reply.setSent(LocalDateTime.now());
+			reply.setSubject(inbox.getAutoReplySubject() != null ? inbox.getAutoReplySubject() : "Automatisk svar");
+			reply.setContent(inbox.getAutoReplyMessage() != null ? inbox.getAutoReplyMessage() : "");
+			reply.setAssociatedIdentifier(receiverEan);
+			reply.setAnswerTo(originalMail);
+			reply.setRead(true);
+			reply.setOriginalFolder(Folder.SENT);
+			reply.setRecipient(originalMail.getSender());
+			final Mail savedReply = mailService.save(reply);
+			medcomSenderService.sendMessage(savedReply, configSender);
+		}
+		catch (Exception e) {
+			log.error("An error happened when trying to send auto-reply for mail {}: {}", originalMail.getId(), e.getMessage(), e);
+		}
+	}
 
     private static String marshal(final Marshaller marshaller, final Object message) {
         final StringWriter sw = new StringWriter();

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head th:replace="~{fragments/header :: header(datatables = false, checkbox = true)}" />
+<body class="top-navigation">
+    <div id="wrapper">
+        <div id="page-wrapper" class="gray-bg">
+            <div th:replace="~{fragments/topbar :: topbar(page=autoreply)}"></div>
+
+            <div class="wrapper wrapper-content">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="col-lg-10">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5>
+                                    <em class="fa fa-reply"></em> &nbsp; Automatisk svar
+                                </h5>
+                            </div>
+                            <div class="ibox-content">
+                                <th:block th:each="inbox : ${inboxes}">
+                                    <div th:replace="~{admin/fragments/auto-reply :: autoReply(${inbox}, ${autoReplyUrl})}"></div>
+                                </th:block>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: scripts(datatables = false, checkbox = true)}" />
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var token = $("meta[name='_csrf']").attr("content");
+
+        $('.i-checks').iCheck({
+            checkboxClass: 'icheckbox_square-green'
+        });
+
+        /*]]>*/
+    </script>
+    <script th:src="@{/js/auto-reply.js}"></script>
+</body>
+</html>

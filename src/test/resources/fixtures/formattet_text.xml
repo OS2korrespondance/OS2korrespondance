@@ -50,8 +50,20 @@
       <Priority>høj_prioritet</Priority>
       <Subject>Forundersøgelse</Subject>
     </AdditionalInformation>
-    <ClinicalInformation>
-      <Text01><FixedFont>Hej, jeg er fast bredde</FixedFont><Underline>Afdeling<Space/>A</Underline><Break/><Italic>har modtaget en henvisning på ovenstående patient.</Italic><Break/><Right>Forinden der foretages visitation, bedes følgende undersøgelser foretaget:</Right><Break/>Røntgen af hofte i to planer.<Break/>Blodtryksresultat<Break/>Sænkningsresultat<Break/><Break/>Resultaterne bedes fremsendt som et &quot;korrespondancebrev&quot;.<Center><Break/><Break/>Venlig hilsen<Break/>overlæge K. Petersen<Break/>15.01.1999<Break/></Center></Text01>
-    </ClinicalInformation>
+	  <ClinicalInformation>
+		  <Text01>
+			  <FixedFont>Hej, jeg er fast bredde</FixedFont>
+			  <Underline>Afdeling<Space/>A</Underline>
+			  <Break/>
+			  <Italic>har modtaget en henvisning på ovenstående patient.</Italic>
+			  <Break/>
+			  <Right>Forinden der foretages visitation</Right>
+			  <Break/>
+			  <Center><Break/>Venlig hilsen<Break/></Center>
+		  </Text01>
+	  </ClinicalInformation>
+	  <ClinicalInformation>
+		  <Text01>&lt;Teste&gt;&lt;Teste noget mere øæå&gt;</Text01>
+	  </ClinicalInformation>
   </ClinicalEmail>
 </Emessage>

@@ -3,7 +3,7 @@
         xmlns="http://www.w3.org/1999/xhtml"
         xmlns:th="http://www.thymeleaf.org"
         xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
-<head th:replace="~{fragments/header :: header(datatables = true)}"/>
+<head th:replace="~{fragments/header :: header(datatables = true, checkbox = true)}"/>
 <body class="top-navigation">
 <div id="wrapper">
     <div id="page-wrapper" class="gray-bg">
@@ -44,23 +44,76 @@
                         </div>
                     </div>
                     <div class="mail-box">
+                        <div class="mail-box-header" style="padding: 10px 20px 10px;">
+                            <div class="btn-group bulk-actions">
+                                <th:block th:unless="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).DELETED}">
+                                    <button class="btn btn-white btn-sm" onclick="mailboxService.bulkDelete()"><i class="fa fa-trash"></i> Slet valgte</button>
+                                </th:block>
+                                <th:block th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).INBOX}">
+                                    <button class="btn btn-white btn-sm" onclick="mailboxService.bulkArchive()"><i class="fa fa-archive"></i> Arkiver valgte</button>
+                                    <button class="btn btn-white btn-sm" onclick="mailboxService.openBulkMoveModal()"><i class="fa fa-folder-open"></i> Flyt valgte</button>
+                                </th:block>
+                                <th:block th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).ARCHIVE}">
+                                    <button class="btn btn-white btn-sm" onclick="mailboxService.bulkUnarchive()"><i class="fa fa-inbox"></i> Flyt til indbakke</button>
+                                </th:block>
+                                <th:block th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).DELETED}">
+                                    <button class="btn btn-white btn-sm" onclick="mailboxService.bulkUndelete()"><i class="fa fa-inbox"></i> Gendan valgte</button>
+                                </th:block>
+                            </div>
+                        </div>
                         <table class="table table-hover table-mail col-lg-12">
                             <thead>
                             <tr>
-                                <th name="id" >id</th>
+                                <th name="id"><input type="checkbox" id="selectAll" class="i-checks"></th>
                                 <th class="align-middle" ><span>Høj prioritet</span></th>
-                                <th  th:unless="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="col-lg-2 align-bottom" >Afsender</th>
+                                <th th:unless="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="col-lg-2 align-bottom" >Afsender</th>
                                 <th th:if="${folder == T(dk.digitalidentity.medcommailbox.model.entity.enums.Folder).SENT}" class="col-lg-2 align-bottom" >Modtager</th>
                                 <th class="col-lg-2 align-bottom">Navn</th>
                                 <th class="col-lg-1 align-bottom">Cpr</th>
                                 <th class="col-lg-5 align-bottom" >Emne</th>
                                 <th class="align-bottom">Vedhæftninger</th>
                                 <th class="align-bottom" >Dato</th>
+                                <th class="align-bottom" ></th>
                             </tr>
                             </thead>
                             <tbody>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- bulk move modal -->
+                    <div class="modal inmodal" id="bulkMoveMailModal" tabindex="-1" role="dialog" style="display: none;" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content animated fadeIn">
+                                <div class="modal-header">
+                                    <h4 class="modal-title">Flyt valgte beskeder</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group row mt-3">
+                                        <label for="bulkMoveTo" class="col-lg-2 col-form-label">Mappe</label>
+                                        <div class="col-lg-10">
+                                            <select id="bulkMoveTo" class="form-control">
+                                                <option value="-1">Indbakke</option>
+                                                <option th:each="inboxFolder : ${inboxFolders}" th:value="${inboxFolder.id}" th:text="${inboxFolder.name}"></option>
+                                                <option th:value="${T(dk.digitalidentity.medcommailbox.Constants).FOLDER_CREATE_ID}">Opret ny mappe</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="bulkNewFolderSection" hidden>
+                                        <div class="form-group row mt-3">
+                                            <label for="bulkFolderName" class="col-lg-2 col-form-label">Ny mappe</label>
+                                            <div class="col-lg-10">
+                                                <input id="bulkFolderName" class="form-control" placeholder="Navn">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-white" style="width: 80px;" onclick="$('#bulkMoveMailModal').modal('hide')">Annuller</button>
+                                    <button type="button" class="btn btn-primary" style="width: 80px;" onclick="mailboxService.bulkMove(); return false;">Flyt</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -68,7 +121,7 @@
     </div>
 </div>
 
-<div th:replace="~{fragments/footer :: scripts(datatables = true)}"></div>
+<div th:replace="~{fragments/footer :: scripts(datatables = true, checkbox = true)}"></div>
 <script th:src="@{/js/mailbox.js}"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -77,6 +130,8 @@
         const folder = [[${folder}]]
         const token = $("meta[name='_csrf']").attr("content");
         const folderRestUrl = "/rest/folder"
+        const daysBeforeDeletion = [[${daysBeforeDeletion}]]
+        const createFolderId = [[${T(dk.digitalidentity.medcommailbox.Constants).FOLDER_CREATE_ID}]]
         let mailboxService;
     +]*/
     /*]]>*/

@@ -73,9 +73,11 @@ public class ReceiptHandler {
             result.setReceiptType(ReceiptType.NEGATIVE);
 			result.setEnvelopeIdentifier(originalEnvelopeIdentifier);
 			result.setLetterIdentifier(firstByEnvelopeIdentifier.map(MedcomLog::getLetterIdentifier).orElseThrow());
-            result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(originalEmessage.getRefuseText() == null
-                    ? originalEmessage.getOriginalLetters().getFirst().getRefuseText()
-                    : originalEmessage.getRefuseText()));
+			result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(
+					originalEmessage.getRefuseText() == null
+							&& !originalEmessage.getOriginalLetters().isEmpty()
+							? originalEmessage.getOriginalLetters().getFirst().getRefuseText()
+							: originalEmessage.getRefuseText()));
             sendEmailNotification(negativeReceipt.getReceiver().getEANIdentifier());
         });
         getNegativeVansReceipt(receipt).ifPresent(negativeVansReceipt -> {
@@ -85,9 +87,11 @@ public class ReceiptHandler {
             result.setReceiptType(ReceiptType.NEGATIVE_VANS);
             result.setEnvelopeIdentifier(originalEmessage.getOriginalEnvelopeIdentifier());
 			result.setLetterIdentifier(firstByEnvelopeIdentifier.map(MedcomLog::getLetterIdentifier).orElseThrow());
-            result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(originalEmessage.getRefuseText() == null
-                    ? originalEmessage.getOriginalLetters().getFirst().getRefuseText()
-                    : originalEmessage.getRefuseText()));
+			result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(
+					originalEmessage.getRefuseText() == null
+							&& !originalEmessage.getOriginalLetters().isEmpty()
+							? originalEmessage.getOriginalLetters().getFirst().getRefuseText()
+							: originalEmessage.getRefuseText()));
 			sendEmailNotification(negativeVansReceipt.getReceiver().getEANIdentifier());
         });
         if (result.getReceiptType() == null) {

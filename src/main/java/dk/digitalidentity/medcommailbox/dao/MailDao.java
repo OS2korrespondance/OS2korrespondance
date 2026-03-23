@@ -27,9 +27,10 @@ public interface MailDao extends JpaRepository<Mail, Long> {
 	long countUnreadForRootFolder(@Param("folder") final Folder folder);
 
 	long countByFolderAndDraftFalseAndReceivedNegativeReceiptTrue(Folder folder);
+	long countByFolderAndDraftFalseAndReceivedNegativeReceiptTrueAndReadFalse(Folder folder);
 	@Query(value = "select count(1) from Mail m where m.folder=:folder " +
-			"and (m.associatedIdentifier in :locationsNumbers) and m.draft=false and m.receivedNegativeReceipt=true")
-	long countByFolderAndDraftFalseAndReceivedNegativeReceiptTrue(@Param("folder") final Folder folder,
+			"and (m.associatedIdentifier in :locationsNumbers) and m.draft=false and m.receivedNegativeReceipt=true and m.read=false")
+	long countByFolderAndDraftFalseAndReceivedNegativeReceiptTrueAndReadFalse(@Param("folder") final Folder folder,
 																  @Param("locationsNumbers") final Set<String> locationsNumbers);
 
 	long countByFolderAndInboxFolderAndDraftFalse(Folder folder, final InboxFolder inboxFolder);

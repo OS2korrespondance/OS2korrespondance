@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -36,6 +37,21 @@ public class Inbox {
 
 	@Column
 	private boolean negativeReceiptNotification;
+
+	@Column
+	private boolean autoReplyEnabled;
+
+	@Column
+	private String autoReplySubject;
+
+	@Column(columnDefinition = "TEXT")
+	private String autoReplyMessage;
+
+	@Column
+	private LocalDate autoReplyStartDate;
+
+	@Column
+	private LocalDate autoReplyEndDate;
 
 	@Builder.Default
 	@OneToMany(mappedBy = "inbox", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)

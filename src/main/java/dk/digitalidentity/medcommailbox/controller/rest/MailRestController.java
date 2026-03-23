@@ -13,10 +13,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import dk.digitalidentity.medcommailbox.session.UserSession;
 import jakarta.servlet.http.HttpSession;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -62,7 +64,11 @@ import dk.digitalidentity.medcommailbox.security.SecurityUtil;
 import dk.digitalidentity.medcommailbox.service.AuditLogService;
 import dk.digitalidentity.medcommailbox.service.BinaryMessageService;
 import dk.digitalidentity.medcommailbox.service.BinaryService;
+import dk.digitalidentity.medcommailbox.controller.rest.dto.AutoReplyForm;
+import dk.digitalidentity.medcommailbox.model.entity.Inbox;
 import dk.digitalidentity.medcommailbox.service.InboxFolderService;
+import dk.digitalidentity.medcommailbox.service.InboxSubscriberService;
+import jakarta.transaction.Transactional;
 import dk.digitalidentity.medcommailbox.service.MailService;
 import dk.digitalidentity.medcommailbox.service.MedcomSenderService;
 import dk.digitalidentity.medcommailbox.service.MessageTemplateService;
@@ -106,6 +112,12 @@ public class MailRestController {
 	private ICprService iCprService;
 	@Autowired
 	private MessageTemplateService messageTemplateService;
+
+	@Autowired
+	private UserSession userSession;
+
+	@Autowired
+	private InboxSubscriberService inboxSubscriberService;
 
 	record AttachemntDTO(MultipartFile file) {
 	}
@@ -152,18 +164,20 @@ public class MailRestController {
 		}
 
 		//filter by user-created folder
-		InboxFolder inboxFolder = null;
 		if (folder.equals(Folder.INBOX)) {
 			//If id of custom folder is provided, find the folder and filter by that folder
 			if (inboxFolderId != null) {
-				inboxFolder = inboxFolderService.findById(inboxFolderId);
+				InboxFolder inboxFolder = inboxFolderService.findById(inboxFolderId);
 				if (inboxFolder != null) {
-					output.setData(output.getData().stream().filter(m -> m.getInboxFolderId() != null && m.getInboxFolderId().equals(inboxFolderId)).toList());
-				} else {
-					output.setData(output.getData().stream().filter(m -> m.getInboxFolderId() == null).toList());
+					output.setData(output.getData().stream()
+							.filter(m -> m.getInboxFolderId() != null && m.getInboxFolderId().equals(inboxFolderId))
+							.toList());
+					return output;
 				}
 			}
-
+			output.setData(output.getData().stream()
+					.filter(m -> m.getInboxFolderId() == null)
+					.toList());
 		}
 
 		return output;
@@ -187,19 +201,11 @@ public class MailRestController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 
-		if (archive && mail.getFolder().equals(Folder.INBOX)) {
-			mail.setFolder(Folder.ARCHIVE);
-			mail.setInboxFolder(null);
-			mailService.save(mail);
-			return new ResponseEntity<>(HttpStatus.OK);
-		} else if (!archive && mail.getFolder().equals(Folder.ARCHIVE)) {
-			mail.setFolder(Folder.INBOX);
-			mailService.save(mail);
-			return new ResponseEntity<>(HttpStatus.OK);
-		} else {
+		if (!applyArchive(mail, archive)) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	@PostMapping("/rest/mails/{id}/delete")
@@ -209,24 +215,115 @@ public class MailRestController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 
+		if (!applyDelete(mail, delete)) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	record BulkDeleteDTO(List<Long> ids, boolean delete) {}
+
+	record BulkArchiveDTO(List<Long> ids, boolean archive) {}
+
+	record BulkMoveDTO(List<Long> ids, long folderId, String newFolderName) {}
+
+	@PostMapping("/rest/mails/bulk/delete")
+	public ResponseEntity<?> bulkDeleteMail(@RequestBody BulkDeleteDTO dto) {
+		if (dto.ids() == null || dto.ids().isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		for (long id : dto.ids()) {
+			Mail mail = mailService.getById(id);
+			if (mail == null) {
+				continue;
+			}
+			applyDelete(mail, dto.delete());
+		}
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@PostMapping("/rest/mails/bulk/archive")
+	public ResponseEntity<?> bulkArchiveMail(@RequestBody BulkArchiveDTO dto) {
+		if (dto.ids() == null || dto.ids().isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		for (long id : dto.ids()) {
+			Mail mail = mailService.getById(id);
+			if (mail == null) {
+				continue;
+			}
+			applyArchive(mail, dto.archive());
+		}
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	private boolean applyDelete(Mail mail, boolean delete) {
 		if (delete) {
 			mail.setFolder(Folder.DELETED);
 			mail.setDeletedDate(LocalDate.now());
 			mailService.save(mail);
-			String details = getDetails(mail);
-			auditLogService.log(AuditLogOperation.MAIL_DELETE, details);
-			return new ResponseEntity<>(HttpStatus.OK);
+			auditLogService.log(AuditLogOperation.MAIL_DELETE, getDetails(mail));
+			return true;
 		} else if (mail.getFolder().equals(Folder.DELETED)) {
 			mail.setFolder(mail.getOriginalFolder());
 			mail.setDeletedDate(null);
 			mailService.save(mail);
-			String details = getDetails(mail);
-			auditLogService.log(AuditLogOperation.MAIL_UNDELETE, details);
-			return new ResponseEntity<>(HttpStatus.OK);
-		} else {
+			auditLogService.log(AuditLogOperation.MAIL_UNDELETE, getDetails(mail));
+			return true;
+		}
+		return false;
+	}
+
+	private boolean applyArchive(Mail mail, boolean archive) {
+		if (archive && mail.getFolder().equals(Folder.INBOX)) {
+			mail.setFolder(Folder.ARCHIVE);
+			mail.setInboxFolder(null);
+			mailService.save(mail);
+			return true;
+		} else if (!archive && mail.getFolder().equals(Folder.ARCHIVE)) {
+			mail.setFolder(Folder.INBOX);
+			mailService.save(mail);
+			return true;
+		}
+		return false;
+	}
+
+	@PostMapping("/rest/mails/bulk/move")
+	public ResponseEntity<?> bulkMoveMail(@RequestBody BulkMoveDTO dto) {
+		if (dto.ids() == null || dto.ids().isEmpty()) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
+		InboxFolder targetFolder = null;
+		if (dto.folderId() == FOLDER_CREATE_ID) {
+			if (dto.newFolderName() == null || dto.newFolderName().isEmpty() || dto.newFolderName().length() > 255) {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
+			InboxFolder newFolder = new InboxFolder();
+			newFolder.setName(dto.newFolderName());
+			targetFolder = inboxFolderService.save(newFolder);
+		} else if (dto.folderId() != FOLDER_INBOX_ID) {
+			targetFolder = inboxFolderService.findById(dto.folderId());
+			if (targetFolder == null) {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
+		}
+
+		for (long id : dto.ids()) {
+			Mail mail = mailService.getById(id);
+			if (mail == null) {
+				continue;
+			}
+			mail.setInboxFolder(targetFolder);
+			mailService.save(mail);
+		}
+
+		return new ResponseEntity<>(targetFolder != null ? targetFolder.getId() : 0L, HttpStatus.OK);
 	}
 
 	private String getDetails(Mail mail) {
@@ -486,6 +583,16 @@ public class MailRestController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Beskeden skal have noget indhold");
 		}
 
+		if (containsInvalidUtf8Mb3Chars(dto.content)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Beskeden indeholder ugyldige tegn (f.eks. emojis). Fjern venligst disse tegn og prøv igen.");
+		}
+
+		if (!dto.answer && containsInvalidUtf8Mb3Chars(dto.subject)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Emnet indeholder ugyldige tegn (f.eks. emojis). Fjern venligst disse tegn og prøv igen.");
+		}
+
 		if (dto.content.replace("\n", "<Break/>").length() > 25000) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Beskeden er for lang. Den må maks være 25000 tegn");
 		}
@@ -557,7 +664,7 @@ public class MailRestController {
 			return new ResponseEntity<>("Tidligere korrespondance sendes ikke med i bunden af meddelelsesteksten, da den maksimale længde er overskredet. ", HttpStatus.OK);
 		}
 
-		return new ResponseEntity<>(HttpStatus.OK);
+		return new ResponseEntity<>(userSession.getLandingInfo() == null ? draft.getId() : null, HttpStatus.OK);
 	}
 
 	private static byte[] getXmlBytes(final String xml) {
@@ -692,6 +799,45 @@ public class MailRestController {
 		try (InputStream is = new java.io.ByteArrayInputStream(pdf)) {
 			org.springframework.util.StreamUtils.copy(is, response.getOutputStream());
 		}
+	}
+
+	@Transactional
+	@ResponseBody
+	@PostMapping("/rest/mail/settings/setAutoReply")
+	public ResponseEntity<?> setAutoReply(@Valid @RequestBody AutoReplyForm form) {
+		Set<String> allowed = SecurityUtil.getLocationNumberConstraint(configuration.getLocationNumberConstraintName(), configuration);
+		if (!allowed.isEmpty() && !allowed.contains(form.inboxEan())) {
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		}
+		if (form.startDate() != null && form.endDate() != null && form.endDate().isBefore(form.startDate())) {
+			return new ResponseEntity<>("Slutdato må ikke være før startdato", HttpStatus.BAD_REQUEST);
+		}
+		Inbox inbox = inboxSubscriberService.getOrCreateInbox(form.inboxEan());
+		inbox.setAutoReplyEnabled(form.enabled());
+		inbox.setAutoReplySubject(form.subject());
+		inbox.setAutoReplyMessage(form.message());
+		inbox.setAutoReplyStartDate(form.startDate());
+		inbox.setAutoReplyEndDate(form.endDate());
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	private boolean containsInvalidUtf8Mb3Chars(String str) {
+		if (str == null) {
+			return false;
+		}
+
+		for (int i = 0; i < str.length(); i++) {
+			int codePoint = str.codePointAt(i);
+			// Characters outside the Basic Multilingual Plane require 4 bytes in UTF-8
+			if (codePoint > 0xFFFF) {
+				return true;
+			}
+			// Skip the low surrogate if this was a supplementary character
+			if (Character.isSupplementaryCodePoint(codePoint)) {
+				i++;
+			}
+		}
+		return false;
 	}
 
 }

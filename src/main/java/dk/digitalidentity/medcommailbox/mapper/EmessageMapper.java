@@ -87,7 +87,11 @@ public class EmessageMapper {
         }
 
         final String xml = marshal(marshaller2006, emessage);
-        return new ToXmlResult(emessage.getEnvelope().getIdentifier(), getClinicalEmail(emessage).orElseThrow().getLetter().getIdentifier(), xml.replace("&lt;","<").replace("&gt;",">"));
+		return new ToXmlResult(
+				emessage.getEnvelope().getIdentifier(),
+				getClinicalEmail(emessage).orElseThrow().getLetter().getIdentifier(),
+				unescapeFormattedTextTags(xml)
+		);
     }
 
     public ToXmlResult binaryToXML(dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.Emessage emessage) {
@@ -98,6 +102,43 @@ public class EmessageMapper {
         final String xml = marshal(marshaller2012, emessage);
         return new ToXmlResult(emessage.getEnvelope().getIdentifier(), getBinaryLetter(emessage).orElseThrow().getLetter().getIdentifier(), xml);
     }
+
+
+	/**
+	 * Unescapes MedCom FormattedTextType tags that have been HTML-escaped by the JAXB marshaller.
+	 *
+	 * Background: FormattedTextType fields store rich text as raw HTML strings rather than
+	 * as proper JAXB element trees. When marshalled, the JAXB marshaller correctly escapes
+	 * all '<' and '>' characters in text content. This method reverses that escaping, but
+	 * only for the known FormattedTextType tags defined in the MedCom 2006 schema —
+	 * ensuring that legitimate user input containing '<' or '>' (e.g. "blodtryk < 120")
+	 * remains correctly escaped in the output.
+	 *
+	 * Supported tags: Bold, Italic, Underline, Right, Center, FixedFont, Break, Space
+	 *
+	 * NOTE: The proper long-term fix is to populate FormattedTextType as a JAXB object tree
+	 * rather than storing raw HTML strings. This method exists as a pragmatic workaround.
+	 */
+	private static String unescapeFormattedTextTags(String xml) {
+		return xml
+				// Opening tags
+				.replace("&lt;Bold&gt;",      "<Bold>")
+				.replace("&lt;Italic&gt;",    "<Italic>")
+				.replace("&lt;Underline&gt;", "<Underline>")
+				.replace("&lt;Right&gt;",     "<Right>")
+				.replace("&lt;Center&gt;",    "<Center>")
+				.replace("&lt;FixedFont&gt;", "<FixedFont>")
+				// Closing tags
+				.replace("&lt;/Bold&gt;",      "</Bold>")
+				.replace("&lt;/Italic&gt;",    "</Italic>")
+				.replace("&lt;/Underline&gt;", "</Underline>")
+				.replace("&lt;/Right&gt;",     "</Right>")
+				.replace("&lt;/Center&gt;",    "</Center>")
+				.replace("&lt;/FixedFont&gt;", "</FixedFont>")
+				// Self-closing tags
+				.replace("&lt;Break/&gt;", "<Break/>")
+				.replace("&lt;Space/&gt;", "<Space/>");
+	}
 
     private static String marshal(final Marshaller marshaller, final Object message) {
         final StringWriter sw = new StringWriter();
@@ -238,7 +279,7 @@ public class EmessageMapper {
         final dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage eMessage = new dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage();
         eMessage.setEnvelope(createEnvelopeType2005(now));
 
-        final PositiveReceipt positiveReceipt = createPositiveRecipt2005(binaryLetter.getReceiver().getIdentifier(), binaryLetter.getSender().getEANIdentifier());
+        final PositiveReceipt positiveReceipt = createPositiveRecipt2005(binaryLetter.getReceiver().getEANIdentifier(), binaryLetter.getSender().getEANIdentifier());
         final PositiveReceipt.OriginalEmessage originalEmessage = createPositiveOriginalBinaryEmessage(orgEMessage);
         final PositiveReceipt.OriginalEmessage.OriginalLetter originalLetter = createPositiveOrginalLetter(binaryLetter);
         originalEmessage.getOriginalLetters().add(originalLetter);

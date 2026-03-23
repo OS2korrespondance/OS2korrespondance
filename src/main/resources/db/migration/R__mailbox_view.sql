@@ -15,7 +15,8 @@ CREATE OR REPLACE VIEW view_mailbox AS SELECT
     m.inbox_folder_id,
     m.read_mail,
     p.cpr AS patient_cpr,
-    p.name AS patient_name
+    p.name AS patient_name,
+    EXISTS(SELECT 1 FROM mail reply WHERE reply.answer_to = m.id AND reply.draft = 0) AS replied
   FROM mail m
   LEFT JOIN reference a ON m.id = a.mail_id
   LEFT JOIN recipient rs ON rs.id = m.sender_id

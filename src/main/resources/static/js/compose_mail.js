@@ -159,8 +159,8 @@ function MailService() {
                     toastr.success("Beskeden er sendt!");
                     setTimeout(() => {window.location.href="/mailbox/INBOX"}, 1000);
                 } else {
-                    toastr.success("Beskeden er sendt! " + data);
-                    setTimeout(() => {window.location.href="/mailbox/INBOX"}, 5000);
+                    toastr.success("Beskeden er sendt! ");
+                    setTimeout(() => {window.location.href="/receipt/" + data}, 5000);
                 }
 
             },

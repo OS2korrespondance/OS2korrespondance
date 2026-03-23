@@ -31,12 +31,12 @@
 					                <tbody>
 						                <tr class="recipientRow" th:each="recipient: ${recipients}">
 											<td th:text="${recipient.fullOrganisationName}" hidden></td>
-											<td>
-												<input class="editShortName form-control" maxlength="35" th:value="${recipient.shortOrganisationName}" th:attr="data-ean=${recipient.eanIdentifier}">
-											</td>
-											<td>
-												<input class="editFullName form-control" th:value="${recipient.fullOrganisationName}">
-						                    </td>
+                                            <td th:attr="data-order=${recipient.shortOrganisationName}">
+                                                <input class="editShortName form-control" maxlength="35" th:value="${recipient.shortOrganisationName}" th:attr="data-ean=${recipient.eanIdentifier}">
+                                            </td>
+                                            <td th:attr="data-order=${recipient.fullOrganisationName}">
+                                                <input class="editFullName form-control" th:value="${recipient.fullOrganisationName}">
+                                            </td>
 						                    <td class="eanIdentifier" th:text="${recipient.eanIdentifier}"></td>
 						                    <td th:text="${recipient.identifierCode} + ': ' + ${recipient.identifier}"></td>
 											<td><a th:attr="data-ean=${recipient.eanIdentifier}, data-name=${recipient.fullOrganisationName}" onclick="recipientsService.handleDelete(this)"><em class="fa fa-trash" style="color: black;"></em></a></td>
@@ -199,7 +199,11 @@
 					"bLengthChange": false,
 					"responsive" : true,
 					"autoWidth": false,
-					"ordering": false,
+					"ordering": true,
+                    "columnDefs": [
+                        { "orderable": false, "targets": [0, 3, 4, 5] },
+                        { "orderDataType": "dom-data", "targets": [1, 2] }
+                    ],
 					"language" : {
 						"search" : "Søg",
 						"lengthMenu" : "_MENU_ modtagere per side",
