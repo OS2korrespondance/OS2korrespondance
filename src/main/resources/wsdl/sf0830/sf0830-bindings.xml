@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jxb:bindings xmlns:jxb="https://jakarta.ee/xml/ns/jaxb"
+              xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+              jxb:version="3.0">
+
+    <jxb:bindings schemaLocation="sp/CallContext_1.xsd">
+        <jxb:schemaBindings>
+            <jxb:package name="dk.digitalidentity.medcommailbox.serviceplatform.sygesikring.generated.callcontext"/>
+        </jxb:schemaBindings>
+    </jxb:bindings>
+
+    <jxb:bindings schemaLocation="sp/InvocationContext_1.xsd">
+        <jxb:schemaBindings>
+            <jxb:package name="dk.digitalidentity.medcommailbox.serviceplatform.sygesikring.generated.invocationcontext"/>
+        </jxb:schemaBindings>
+    </jxb:bindings>
+
+</jxb:bindings>

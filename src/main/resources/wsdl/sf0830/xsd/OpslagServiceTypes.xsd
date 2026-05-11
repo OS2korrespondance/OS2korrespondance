@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:tns="http://serviceplatformen.dk/xml/wsdl/soap11/Sygesikring/Sygesikringsoplysninger/3/"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://serviceplatformen.dk/xml/wsdl/soap11/Sygesikring/Sygesikringsoplysninger/3/"
+            elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0">
+
+    <xsd:simpleType name="CPRType">
+        <xsd:annotation>
+            <xsd:documentation>Type for et erstatningscprnummer.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="([1-2][0-9]|0[1-9]|3[0-1])(0[1-9]|1[12])[0-9]{2}[17][A-Z]{2}[0-9]"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="SikretType">
+        <xsd:sequence>
+            <xsd:element name="SSikrGrpKode" type="xsd:int" minOccurs="0"/>
+            <xsd:element name="SIkraftDatoGrp" type="xsd:date" minOccurs="0"/>
+            <xsd:element name="SBevisIDato" type="xsd:date" minOccurs="0"/>
+            <xsd:element name="SIkraftDatoYder" type="xsd:date" minOccurs="0"/>
+            <xsd:element name="SFolgeskabsPerson" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="SSikrGrpKodeFrem" type="xsd:int" minOccurs="0"/>
+            <xsd:element name="SIkraftDatoGrpFrem" type="xsd:date" minOccurs="0"/>
+            <xsd:element name="SIkraftDatoYderFrem" type="xsd:date" minOccurs="0"/>
+            <xsd:element name="CPRnr" type="tns:CPRType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="YderType">
+        <xsd:sequence>
+            <xsd:element name="PrakBetegn" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="YdernrYder" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="AdrYder" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="PostnrYder" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="PostdistYder" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="HvdTlf" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="EmailYder" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="WWW" type="xsd:string" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>

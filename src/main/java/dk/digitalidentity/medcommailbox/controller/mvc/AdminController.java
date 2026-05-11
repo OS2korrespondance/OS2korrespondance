@@ -2,7 +2,9 @@ package dk.digitalidentity.medcommailbox.controller.mvc;
 
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.model.entity.Inbox;
+import dk.digitalidentity.medcommailbox.model.entity.enums.MonitoringSubscriberType;
 import dk.digitalidentity.medcommailbox.security.RequireAdminAccess;
+import dk.digitalidentity.medcommailbox.service.MonitoringService;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
 import dk.digitalidentity.medcommailbox.service.InboxSubscriberService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ public class AdminController {
 	private final MedcomMailboxConfiguration configuration;
 	private final InboxSubscriberService subscriberService;
 	private final RecipientService recipientService;
+	private final MonitoringService monitoringService;
 
     public record InboxDTO(String eanIdentifier,
             String organisationName,
@@ -27,7 +30,9 @@ public class AdminController {
             String autoReplySubject,
             String autoReplyMessage,
             LocalDate autoReplyStartDate,
-            LocalDate autoReplyEndDate)
+            LocalDate autoReplyEndDate,
+			boolean autoDeleteEnabled,
+		    int autoDeleteDays)
     {}
 
 	@GetMapping("/admin/recipients")
@@ -40,6 +45,11 @@ public class AdminController {
 	public String getSettings(Model model) {
 		setInboxes(model);
 		model.addAttribute("subscribers", subscriberService.mapOfSubscribers());
+		model.addAttribute("alarmSubscribers",
+				monitoringService.getSubscribers(MonitoringSubscriberType.AUTOMATIC_ALARM));
+		model.addAttribute("contactSubscribers",
+				monitoringService.getSubscribers(MonitoringSubscriberType.MANUAL_CONTACT));
+		model.addAttribute("monitoringState", monitoringService.getOrCreateState());
 		return "admin/settings";
 	}
 
@@ -57,13 +67,30 @@ public class AdminController {
 		return "admin/fragments/auto-reply :: autoReplyList";
 	}
 
+	@GetMapping("/admin/settings/autodeleteconfig")
+	public String getAutoDeleteConfigurationFragment(Model model) {
+		setInboxes(model);
+		model.addAttribute("autoDeleteUrl", "/rest/admin/settings/setAutoDelete");
+		return "admin/fragments/auto-delete :: autoDeleteList";
+	}
+
+	@GetMapping("/admin/settings/monitoringconfig")
+	public String getMonitoringConfigurationFragment(Model model) {
+		model.addAttribute("alarmSubscribers",
+				monitoringService.getSubscribers(MonitoringSubscriberType.AUTOMATIC_ALARM));
+		model.addAttribute("contactSubscribers",
+				monitoringService.getSubscribers(MonitoringSubscriberType.MANUAL_CONTACT));
+		model.addAttribute("monitoringState", monitoringService.getOrCreateState());
+		return "admin/fragments/monitoring :: monitoring";
+	}
+
 	private void setInboxes(Model model) {
 		model.addAttribute("inboxes", configuration.getSenders().stream()
 				.map(s -> {
 					final Inbox inbox = subscriberService.getOrCreateInbox(s.getEanIdentifier());
 					return new InboxDTO(s.getEanIdentifier(), s.getOrganisationName(), inbox.isNegativeReceiptNotification(),
 						inbox.isAutoReplyEnabled(), inbox.getAutoReplySubject(), inbox.getAutoReplyMessage(),
-						inbox.getAutoReplyStartDate(), inbox.getAutoReplyEndDate());
+						inbox.getAutoReplyStartDate(), inbox.getAutoReplyEndDate(), inbox.isAutoDeleteEnabled(), inbox.getAutoDeleteDays() == null ? 14 : inbox.getAutoDeleteDays());
 				}
 				)
 				.toList());

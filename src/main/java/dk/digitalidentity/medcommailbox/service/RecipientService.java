@@ -10,10 +10,13 @@ import jakarta.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+
 import dk.digitalidentity.medcommailbox.dao.RecipientDao;
 import dk.digitalidentity.medcommailbox.model.entity.Recipient;
 
 @Service
+@Validated
 public class RecipientService {
 	
 	@Autowired
@@ -23,6 +26,10 @@ public class RecipientService {
 	
 	public List<Recipient> getAll() {
 		return recipientDao.findAll();
+	}
+
+	public Optional<Recipient> findByYdernummer(String ydernummer) {
+		return recipientDao.findFirstByIdentifierAndIdentifierCodeOrderByIdAsc(ydernummer, IdentifierCode.ydernummer);
 	}
 
 	public Optional<Recipient> findByEanIdentifier(String eanIdentifier) {

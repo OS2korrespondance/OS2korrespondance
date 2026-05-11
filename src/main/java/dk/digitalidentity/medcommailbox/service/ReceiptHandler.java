@@ -64,15 +64,23 @@ public class ReceiptHandler {
             final PositiveReceipt.OriginalEmessage originalEmessage = positiveReceipt.getOriginalEmessage();
             result.setReceiptType(ReceiptType.POSITIVE);
             result.setEnvelopeIdentifier(originalEmessage.getOriginalEnvelopeIdentifier());
-            result.setLetterIdentifier(originalEmessage.getOriginalLetters().getFirst().getOriginalLetterIdentifier());
+            result.setLetterIdentifier(originalEmessage.getOriginalLetters().stream()
+                    .findFirst()
+                    .map(PositiveReceipt.OriginalEmessage.OriginalLetter::getOriginalLetterIdentifier)
+                    .orElse(null));
         });
         getNegativeReceipt(receipt).ifPresent(negativeReceipt -> {
             final NegativeReceipt.OriginalEmessage originalEmessage = negativeReceipt.getOriginalEmessage();
 			final String originalEnvelopeIdentifier = originalEmessage.getOriginalEnvelopeIdentifier();
-			final Optional<MedcomLog> firstByEnvelopeIdentifier = logService.getFirstByEnvelopeIdentifier(originalEnvelopeIdentifier);
+			final String letterIdentifier = resolveLetterIdentifier(
+					originalEnvelopeIdentifier,
+					originalEmessage.getOriginalLetters().stream()
+							.findFirst()
+							.map(NegativeReceipt.OriginalEmessage.OriginalLetter::getOriginalLetterIdentifier)
+							.orElse(null));
             result.setReceiptType(ReceiptType.NEGATIVE);
 			result.setEnvelopeIdentifier(originalEnvelopeIdentifier);
-			result.setLetterIdentifier(firstByEnvelopeIdentifier.map(MedcomLog::getLetterIdentifier).orElseThrow());
+			result.setLetterIdentifier(letterIdentifier);
 			result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(
 					originalEmessage.getRefuseText() == null
 							&& !originalEmessage.getOriginalLetters().isEmpty()
@@ -83,10 +91,15 @@ public class ReceiptHandler {
         getNegativeVansReceipt(receipt).ifPresent(negativeVansReceipt -> {
             final NegativeVansReceipt.OriginalEmessage originalEmessage = negativeVansReceipt.getOriginalEmessage();
 			final String originalEnvelopeIdentifier = originalEmessage.getOriginalEnvelopeIdentifier();
-			final Optional<MedcomLog> firstByEnvelopeIdentifier = logService.getFirstByEnvelopeIdentifier(originalEnvelopeIdentifier);
+			final String letterIdentifier = resolveLetterIdentifier(
+					originalEnvelopeIdentifier,
+					originalEmessage.getOriginalLetters().stream()
+							.findFirst()
+							.map(NegativeVansReceipt.OriginalEmessage.OriginalLetter::getOriginalLetterIdentifier)
+							.orElse(null));
             result.setReceiptType(ReceiptType.NEGATIVE_VANS);
             result.setEnvelopeIdentifier(originalEmessage.getOriginalEnvelopeIdentifier());
-			result.setLetterIdentifier(firstByEnvelopeIdentifier.map(MedcomLog::getLetterIdentifier).orElseThrow());
+			result.setLetterIdentifier(letterIdentifier);
 			result.setRefuseText(MedcomMapper.medcomFreeTextContentToHtml(
 					originalEmessage.getRefuseText() == null
 							&& !originalEmessage.getOriginalLetters().isEmpty()
@@ -96,6 +109,14 @@ public class ReceiptHandler {
         });
         if (result.getReceiptType() == null) {
             throw new RuntimeException("Tried to handle receipt with S3 file Key: " + medcomXml.getS3Key() + ", but positive, negative and negative vans receipt was null.");
+        }
+        if (result.getLetterIdentifier() == null) {
+            FailedS3Key failedS3Key = new FailedS3Key();
+            failedS3Key.setS3FileKey(medcomXml.getS3Key());
+            failedS3KeyService.save(failedS3Key);
+            log.warn("Could not resolve letter identifier for receipt with s3Key {} and envelopeIdentifier {}. No matching MedcomLog and receipt did not contain an OriginalLetter. Marking as failed and skipping.",
+                    medcomXml.getS3Key(), result.getEnvelopeIdentifier());
+            return Optional.empty();
         }
 
         final MedcomLog exitingLog = logService.getByEnvelopeIdentifierAndLetterIdentifier(result.getEnvelopeIdentifier(), result.getLetterIdentifier())
@@ -124,6 +145,12 @@ public class ReceiptHandler {
 				.queue(NOTIFICATION_QUEUE)
 				.body(JsonSimpleMessage.toJson(NotificationEvent.builder().inboxEan(ean).negative(true).build()))
 		);
+    }
+
+    private String resolveLetterIdentifier(final String envelopeIdentifier, final String receiptOriginalLetterIdentifier) {
+        return logService.getFirstByEnvelopeIdentifier(envelopeIdentifier)
+                .map(MedcomLog::getLetterIdentifier)
+                .orElse(receiptOriginalLetterIdentifier);
     }
 
 }

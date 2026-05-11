@@ -1,4 +1,3 @@
-﻿using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Spi;
 using System;
@@ -7,16 +6,16 @@ namespace S3FileUploader
 {
     internal class MicrosoftDependencyInjectionJobFactory : IJobFactory
     {
-        private ServiceProvider serviceProvider;
+        private readonly IServiceProvider serviceProvider;
 
-        public MicrosoftDependencyInjectionJobFactory(ServiceProvider serviceProvider)
+        public MicrosoftDependencyInjectionJobFactory(IServiceProvider serviceProvider)
         {
             this.serviceProvider = serviceProvider;
         }
 
         public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
         {
-            return serviceProvider.GetService(bundle.JobDetail.JobType) as IJob;
+            return (IJob)serviceProvider.GetService(bundle.JobDetail.JobType);
         }
 
         public void ReturnJob(IJob job)

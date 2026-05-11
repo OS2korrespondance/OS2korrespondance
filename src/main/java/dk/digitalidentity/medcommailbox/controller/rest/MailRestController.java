@@ -6,7 +6,6 @@ import static dk.digitalidentity.medcommailbox.util.UuidDash.removeDashes;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,6 +14,7 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -56,7 +56,6 @@ import dk.digitalidentity.medcommailbox.model.entity.enums.EpisodeOfCareStatusCo
 import dk.digitalidentity.medcommailbox.model.entity.enums.Folder;
 import dk.digitalidentity.medcommailbox.model.entity.enums.ReferenceType;
 import dk.digitalidentity.medcommailbox.model.entity.enums.Status;
-import dk.digitalidentity.medcommailbox.datatables.MailDatatableDao;
 import dk.digitalidentity.medcommailbox.datatables.model.MailboxDatatableDTO;
 import dk.digitalidentity.medcommailbox.mapper.EmessageMapper;
 import dk.digitalidentity.medcommailbox.security.RequireUserAccess;
@@ -75,7 +74,10 @@ import dk.digitalidentity.medcommailbox.service.MessageTemplateService;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
 import dk.digitalidentity.medcommailbox.service.S3Service;
 import dk.digitalidentity.medcommailbox.service.cpr.ICprService;
+import dk.digitalidentity.medcommailbox.service.cpr.LogHelper;
 import dk.digitalidentity.medcommailbox.service.cpr.dto.CprLookupDto;
+import dk.digitalidentity.medcommailbox.service.ssr.ISSRService;
+import dk.digitalidentity.medcommailbox.service.ssr.dto.DoctorLookupDto;
 import dk.oio.rep.medcom_dk.xml.schemas._2012._03._28.ObjectExtensionCodeType;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -110,6 +112,8 @@ public class MailRestController {
 	private MedcomSenderService senderService;
 	@Autowired
 	private ICprService iCprService;
+	@Autowired
+	private ISSRService issrService;
 	@Autowired
 	private MessageTemplateService messageTemplateService;
 
@@ -667,10 +671,6 @@ public class MailRestController {
 		return new ResponseEntity<>(userSession.getLandingInfo() == null ? draft.getId() : null, HttpStatus.OK);
 	}
 
-	private static byte[] getXmlBytes(final String xml) {
-		return xml.getBytes(StandardCharsets.ISO_8859_1);
-	}
-
 	private static String findRecipientName(final Recipient recipient, final Mail draft) {
 		return recipient != null ? recipient.getShortOrganisationName()
 				: draft.getRecipient().getShortOrganisationName();
@@ -736,12 +736,42 @@ public class MailRestController {
 		return true;
 	}
 
-	@GetMapping("/rest/mail/cprlookup/{cpr}")
-	public String getNameFromCpr(@PathVariable String cpr) {
-		CprLookupDto dto = iCprService.cprLookup(cpr);
-		return dto != null
-				? dto.getName() + " " + dto.getSurname()
-				: "";
+	record ExtendedCprLookupResponse(
+			String patientName,
+			String doctorYdernummer,
+			String doctorPraksisbetegnelse,
+			String matchedRecipientEan) {
+	}
+
+	@GetMapping("/rest/mail/cprlookup/{cpr}/extended")
+	public ResponseEntity<ExtendedCprLookupResponse> getExtendedInfoFromCpr(@PathVariable String cpr) {
+		String patientName = "";
+		CprLookupDto cprDto = iCprService.cprLookup(cpr);
+		if (cprDto != null) {
+			patientName = cprDto.getName() + " " + cprDto.getSurname();
+		}
+
+		Optional<DoctorLookupDto> doctorOpt = issrService.lookupDoctor(cpr);
+		String ydernummer = doctorOpt.map(DoctorLookupDto::getYdernummer).orElse(null);
+		String matchedEan = ydernummer == null
+				? null
+				: recipientService.findByYdernummer(ydernummer)
+						.map(Recipient::getEanIdentifier)
+						.orElse(null);
+
+		if (matchedEan == null && ydernummer != null) {
+			log.info("SF0830: ydernummer {} not found in recipient list (CPR {})", ydernummer, LogHelper.SafeCPR(cpr));
+		}
+
+		String auditDetails = "Læge opslået for " + patientName
+				+ (ydernummer != null ? " (ydernr. " + ydernummer + ")" : " (ingen læge fundet)");
+		auditLogService.log(AuditLogOperation.GP_LOOKUP, auditDetails);
+
+		return ResponseEntity.ok(new ExtendedCprLookupResponse(
+				patientName,
+				ydernummer,
+				doctorOpt.map(DoctorLookupDto::getPraksisbetegnelse).orElse(null),
+				matchedEan));
 	}
 
 	public record TemplateDto(String name, String subject, boolean isHighPriority, String content) {

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="Sygesikringsoplysninger"
+                  targetNamespace="http://serviceplatformen.dk/xml/wsdl/soap11/Sygesikring/Sygesikringsoplysninger/3/"
+                  xmlns:tns="http://serviceplatformen.dk/xml/wsdl/soap11/Sygesikring/Sygesikringsoplysninger/3/"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:wsp="http://www.w3.org/ns/ws-policy"
+                  xmlns:spf="http://serviceplatformen.dk/xml/schemas/ServiceplatformFault/1/">
+
+    <wsdl:import namespace="http://serviceplatformen.dk/xml/wsdl/soap11/Security/Policy" location="policies.wsdl"/>
+
+    <wsdl:types>
+        <xsd:schema targetNamespace="http://serviceplatformen.dk/xml/wsdl/soap11/Sygesikring/Sygesikringsoplysninger/3/">
+            <xsd:include schemaLocation="../../SygesikringsoplysningerMsg.xsd"/>
+        </xsd:schema>
+        <xsd:schema targetNamespace="http://serviceplatformen.dk/xml/schemas/ServiceplatformFault/1/">
+            <xsd:include schemaLocation="../../sp/ServiceplatformFault_1.xsd"/>
+        </xsd:schema>
+    </wsdl:types>
+
+    <wsdl:message name="SygesikringsoplysningerLaesRequestMessage">
+        <wsdl:part name="request" element="tns:SygesikringsoplysningerLaesRequest"/>
+    </wsdl:message>
+    <wsdl:message name="SygesikringsoplysningerLaesResponseMessage">
+        <wsdl:part name="response" element="tns:SygesikringsoplysningerLaesResponse"/>
+    </wsdl:message>
+
+    <wsdl:message name="ServiceplatformFault">
+        <wsdl:part name="ServiceplatformFault" element="spf:ServiceplatformFault"/>
+    </wsdl:message>
+
+    <wsdl:portType name="SygesikringsoplysningerServicePort">
+        <wsdl:operation name="SygesikringsoplysningerLaes">
+            <wsdl:input message="tns:SygesikringsoplysningerLaesRequestMessage"/>
+            <wsdl:output message="tns:SygesikringsoplysningerLaesResponseMessage"/>
+            <wsdl:fault message="tns:ServiceplatformFault" name="ServiceplatformFault"/>
+        </wsdl:operation>
+    </wsdl:portType>
+
+    <wsdl:binding name="SygesikringsoplysningerServiceBinding" type="tns:SygesikringsoplysningerServicePort">
+        <wsp:PolicyReference URI="policies.wsdl#ServiceplatformBindingPolicy"/>
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+        <wsdl:operation name="SygesikringsoplysningerLaes">
+            <soap:operation soapAction="http://serviceplatformen.dk/xml/wsdl/soap11/Sygesikring/Sygesikringsoplysninger/3/SygesikringsoplysningerLaes"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="ServiceplatformFault">
+                <soap:fault name="ServiceplatformFault" use="literal"/>
+            </wsdl:fault>
+        </wsdl:operation>
+    </wsdl:binding>
+
+    <wsdl:service name="SygesikringsoplysningerService">
+        <wsdl:port name="SygesikringsoplysningerServicePort" binding="tns:SygesikringsoplysningerServiceBinding">
+            <soap:address location="https://localhost:8080/service/Sygesikring/Opslag/3"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

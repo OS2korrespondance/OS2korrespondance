@@ -113,6 +113,8 @@ function MailboxService() {
                 {
                     targets: [8],
                     data: "receivedNegativeReceipt",
+                    orderable: false,
+                    searchable: false,
                     render: (data, type, row, meta) => {
                         if (data === true) {
                             return `<span class="label label-danger" data-toggle="tooltip" data-placement="top" title="Negativ kvittering"><i class="fa fa-fw fa-exclamation-triangle"></i></span>`

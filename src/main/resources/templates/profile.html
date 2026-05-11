@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head th:replace="~{fragments/header :: header}" />
+<body class="top-navigation">
+<div id="wrapper">
+    <div id="page-wrapper" class="gray-bg">
+        <div th:replace="~{fragments/topbar :: topbar(page=profile)}" />
+
+        <div class="wrapper wrapper-content">
+            <div class="row">
+                <div class="col-lg-1"></div>
+                <div class="col-lg-10">
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            <h5>Profil</h5>
+                        </div>
+                        <div class="ibox-content">
+                            <div class="form-group">
+                                <label for="signatureInput">Email-signatur</label>
+                                <p class="text-muted">Din signatur indsættes automatisk i bunden af nye beskeder.</p>
+                                <textarea id="signatureInput" class="form-control" rows="8"
+                                          th:text="${signature}"
+                                          placeholder="F.eks.&#10;Med venlig hilsen&#10;Jens Jensen&#10;Psykolog, PPR&#10;Tlf: 12 34 56 78"></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="button" id="saveSignatureBtn" class="btn btn-primary">
+                                    <i class="fa fa-save"></i> Gem signatur
+                                </button>
+                            </div>
+
+                            <div id="saveSuccess" class="alert alert-success" style="display: none; margin-top: 15px;">
+                                Signaturen er gemt.
+                            </div>
+                            <div id="saveError" class="alert alert-danger" style="display: none; margin-top: 15px;">
+                                Der opstod en fejl. Prøv venligst igen.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: scripts}" />
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        const token = $("meta[name='_csrf']").attr("content");
+    +]*/
+    /*]]>*/
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var saveBtn = document.getElementById("saveSignatureBtn");
+        var signatureInput = document.getElementById("signatureInput");
+        var successAlert = document.getElementById("saveSuccess");
+        var errorAlert = document.getElementById("saveError");
+
+        saveBtn.addEventListener("click", function() {
+            successAlert.style.display = "none";
+            errorAlert.style.display = "none";
+
+            fetch("/rest/profile/signature", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": token
+                },
+                body: JSON.stringify({ signature: signatureInput.value })
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    successAlert.style.display = "block";
+                    setTimeout(function() {
+                        successAlert.style.display = "none";
+                    }, 3000);
+                } else {
+                    errorAlert.style.display = "block";
+                }
+            })
+            .catch(function() {
+                errorAlert.style.display = "block";
+            });
+        });
+    });
+</script>
+</body>
+</html>

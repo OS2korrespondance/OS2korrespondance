@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Quartz;
-using RestSharp;
 using S3FileUploader.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace S3FileUploader.Service
 {
@@ -14,29 +14,27 @@ namespace S3FileUploader.Service
     {
         private readonly ILogger<FileUploadJob> logger;
         private readonly FileUpload fileUpload = new FileUpload();
+        private readonly List<FileDownload> fileDownloads = new List<FileDownload>();
         private readonly FileShareService fileShareService;
         private static List<string> uploadedFiles = new List<string>();
+        private static readonly DateTime ServiceStartTime = DateTime.UtcNow;
+        private readonly MonitoringClient monitoringClient;
 
-        public FileUploadJob(ILogger<FileUploadJob> logger, IConfiguration configuration, FileShareService fileShareService)
+        public FileUploadJob(ILogger<FileUploadJob> logger, IConfiguration configuration, FileShareService fileShareService, MonitoringClient monitoringClient)
         {
             this.logger = logger;
             configuration.GetSection("FileUpload").Bind(fileUpload);
+            configuration.GetSection("FileDownloads").Bind(fileDownloads);
             this.fileShareService = fileShareService;
+            this.monitoringClient = monitoringClient;
         }
 
-        public void Execute(IJobExecutionContext context)
+        public Task Execute(IJobExecutionContext context)
         {
-            // ping endpoint to inform backend the on-premise agent is still running
-            try
-            {
-                var client = new RestClient(fileUpload.IsAliveUrl);
-                var request = new RestRequest(Method.GET);
-                client.Execute(request);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to ping mailbox system");
-            }
+            // Send IsAlive
+            monitoringClient.SendIsAlive(
+                (long)(DateTime.UtcNow - ServiceStartTime).TotalSeconds,
+                GetPathStatuses());
 
             try
             {
@@ -44,7 +42,7 @@ namespace S3FileUploader.Service
                 if (newestFiles.Count == 0)
                 {
                     logger.LogInformation("Found no new files in folder {0}", fileUpload.DirectoryPath);
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 foreach (string file in newestFiles)
@@ -73,17 +71,24 @@ namespace S3FileUploader.Service
 
                     uploadedFiles.Add(file);
 
+                    using (var fileStream = File.OpenRead(file))
+                    {
+                        fileShareService.UploadFile(uploadFileName, fileStream);
+                    }
+
                     string to = Path.Combine(fileUpload.ProcessedPath, fileName);
-
                     logger.LogInformation("Moving processed file from " + file + " to " + to);
-
                     File.Move(file, to);
+
+                    uploadedFiles.Remove(file);
                 }
             }
             catch (Exception e)
             {
                 logger.LogError(e, "Failed to execute FileUpload job for {0}", fileUpload.Name);
+                monitoringClient.ReportError("FileUploadJob", e.Message);
             }
+            return Task.CompletedTask;
         }
 
         private bool IsFileLocked(string filePath)
@@ -116,6 +121,57 @@ namespace S3FileUploader.Service
             }
 
             return newFiles;
+        }
+
+        private List<object> GetPathStatuses()
+        {
+            var paths = new List<object>();
+
+            // FileUpload path
+            paths.Add(new
+            {
+                name = fileUpload.Name + "_DirectoryPath",
+                directoryPath = fileUpload.DirectoryPath,
+                accessible = TestDirectoryAccess(fileUpload.DirectoryPath)
+            });
+            paths.Add(new
+            {
+                name = fileUpload.Name + "_ProcessedPath",
+                directoryPath = fileUpload.ProcessedPath,
+                accessible = TestDirectoryAccess(fileUpload.ProcessedPath)
+            });
+
+            // FileDownload paths
+            foreach (var download in fileDownloads)
+            {
+                paths.Add(new
+                {
+                    name = download.Name,
+                    directoryPath = download.DirectoryPath,
+                    accessible = TestDirectoryAccess(download.DirectoryPath)
+                });
+            }
+
+            return paths;
+        }
+
+        private bool TestDirectoryAccess(string path)
+        {
+            try
+            {
+                if (!Directory.Exists(path))
+                {
+                    return false;
+                }
+
+                // Test read access by listing files
+                Directory.EnumerateFiles(path);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

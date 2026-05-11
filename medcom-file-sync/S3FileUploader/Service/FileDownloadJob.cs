@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using S3FileUploader.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace S3FileUploader.Service
 {
@@ -14,15 +15,17 @@ namespace S3FileUploader.Service
         private readonly ILogger _logger;
         private readonly FileShareService _fileShareService;
         private readonly List<FileDownload> _fileDownloads = new List<FileDownload>();
+        private readonly MonitoringClient monitoringClient;
 
-        public FileDownloadJob(ILogger<FileDownloadJob> logger, IConfiguration configuration, FileShareService fileShareService)
+        public FileDownloadJob(ILogger<FileDownloadJob> logger, IConfiguration configuration, FileShareService fileShareService, MonitoringClient monitoringClient)
         {
             _logger = logger;
             configuration.GetSection("FileDownloads").Bind(_fileDownloads);
             _fileShareService = fileShareService;
+            this.monitoringClient = monitoringClient;
         }
 
-        public void Execute(IJobExecutionContext context)
+        public Task Execute(IJobExecutionContext context)
         {
             try
             {
@@ -50,7 +53,9 @@ namespace S3FileUploader.Service
             catch (Exception e)
             {
                 _logger.LogError(e, "Failed to execute FileDownload job");
+                monitoringClient.ReportError("FileDownloadJob", e.Message);
             }
+            return Task.CompletedTask;
         }
 
         private List<string> GetFiles(FileDownload fileDownload, List<string> files)

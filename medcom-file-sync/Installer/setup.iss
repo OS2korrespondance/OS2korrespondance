@@ -1,7 +1,7 @@
 #define AppId "{{1a0eacc0-8770-4299-b6b6-d0cb7c54f14b}"
 #define AppSourceDir "..\S3FileUploader\bin\Debug"
 #define AppName "MedcomFileSync"
-#define AppVersion "1.1.0"
+#define AppVersion "1.2.0"
 #define AppPublisher "Digital Identity"
 #define AppURL "https://digital-identity.dk/"
 

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="monitoring">
+    <div id="monitoringConfiguration">
+
+        <!-- Alarm interval -->
+        <div class="form-group row mb-3">
+            <label class="col-sm-4 col-form-label">Alarm interval (når servicen er nede)</label>
+            <div class="col-sm-4">
+                <select id="alarmIntervalSelect" class="form-control"
+                        th:data-current="${monitoringState.alarmIntervalMinutes}">
+                    <option value="60">Hver time</option>
+                    <option value="120">Hver 2. time</option>
+                    <option value="180">Hver 3. time</option>
+                    <option value="360">Hver 6. time</option>
+                    <option value="720">Hver 12. time (2 gange i døgnet)</option>
+                    <option value="1440">Én gang i døgnet</option>
+                </select>
+            </div>
+        </div>
+
+
+        <!-- Automatiske alarmer -->
+        <div class="ibox">
+            <div class="ibox-title">
+                <em class="fa fa-bell"></em> &nbsp; Automatiske alarmer
+            </div>
+            <div class="ibox-content">
+                <table id="alarmSubscribersTable" class="table table-hover" style="width:100%">
+                    <thead style="display:none;">
+                    <tr>
+                        <th>E-mail</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="sub : ${alarmSubscribers}">
+                        <td class="w-100 text-truncate" th:text="${sub.email}"></td>
+                        <td class="text-right text-nowrap">
+                            <button type="button" class="btn btn-white btn-remove-alarm" th:data-email="${sub.email}"><em class="fa fa-trash"></em></button>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="2">
+                            <div class="input-group d-flex justify-content-end">
+                                <input type="email" id="alarm-email-input"
+                                       autocomplete="off"
+                                       class="form-control ml-auto"
+                                       placeholder="Tilføj e-mailadresse" />
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-primary" id="btn-add-alarm">
+                                        <em class="fa fa-plus"></em>&nbsp; Tilføj
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="alarm-email-error"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Kontakter ved andre problemer -->
+        <div class="ibox">
+            <div class="ibox-title">
+                <em class="fa fa-user"></em> &nbsp; Kontakter ved andre problemer
+            </div>
+            <div class="ibox-content">
+                <table id="contactSubscribersTable" class="table table-hover" style="width:100%">
+                    <thead style="display:none;">
+                    <tr>
+                        <th>E-mail</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="sub : ${contactSubscribers}">
+                        <td class="w-100 text-truncate" th:text="${sub.email}"></td>
+                        <td class="text-right text-nowrap">
+                            <button type="button" class="btn btn-white btn-remove-contact" th:data-email="${sub.email}"><em class="fa fa-trash"></em></button>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="2">
+                            <div class="input-group d-flex justify-content-end">
+                                <input type="email" id="contact-email-input"
+                                       autocomplete="off"
+                                       class="form-control ml-auto"
+                                       placeholder="Tilføj e-mailadresse" />
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-primary" id="btn-add-contact">
+                                        <em class="fa fa-plus"></em>&nbsp; Tilføj
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="contact-email-error"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

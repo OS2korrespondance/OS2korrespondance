@@ -19,7 +19,9 @@ public enum AuditLogOperation {
 	RECIPIENT_DELETED("Modtager slettet"),
 	RECIPIENT_CHANGE_NAME("Modtager opdateret"),
 
-	CPR_LOOKUP("CPR opslået");
+	CPR_LOOKUP("CPR opslået"),
+
+	GP_LOOKUP("Læge opslået via CPR");
 	private String message;
 
 	private AuditLogOperation(String message) {

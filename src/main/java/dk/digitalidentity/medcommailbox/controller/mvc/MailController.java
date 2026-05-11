@@ -17,6 +17,7 @@ import dk.digitalidentity.medcommailbox.service.MedcomLogService;
 import dk.digitalidentity.medcommailbox.service.MessageTemplateService;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
 import dk.digitalidentity.medcommailbox.service.S3Service;
+import dk.digitalidentity.medcommailbox.service.UserProfileService;
 import dk.digitalidentity.medcommailbox.session.LandingInfo;
 import dk.digitalidentity.medcommailbox.session.UserSession;
 import jakarta.servlet.http.HttpSession;
@@ -77,6 +78,12 @@ public class MailController {
 	private S3Service s3Service;
 	@Autowired
 	private InboxSubscriberService inboxSubscriberService;
+
+	@Autowired
+	private UserProfileService userProfileService;
+
+	@Autowired
+	private SecurityUtil securityUtil;
 
 	@GetMapping("/mailbox/{folder}")
 	public String getMailbox(Model model, @PathVariable Folder folder, @RequestParam(name = "folder", required = false) Long inboxFolderId, HttpSession httpSession) {
@@ -181,6 +188,9 @@ public class MailController {
 
 		model.addAttribute("senders", senders);
 
+		String emailSignature = userProfileService.getSignature(securityUtil.getUserId());
+		model.addAttribute("emailSignature", emailSignature);
+
 		return "compose_mail/compose_mail";
 	}
 
@@ -237,6 +247,9 @@ public class MailController {
 		model.addAttribute("content", newMail.getContent());
 		model.addAttribute("patientName", mail.getPatient().getName());
 		model.addAttribute("patientCpr", mail.getPatient().getCpr());
+
+		String emailSignature = userProfileService.getSignature(securityUtil.getUserId());
+		model.addAttribute("emailSignature", emailSignature);
 
 		return "compose_mail/compose_mail";
 	}
@@ -324,6 +337,11 @@ public class MailController {
 		model.addAttribute("selectedStatus", nullSafe(() -> userSession.getLandingInfo().getEpisodeOfCareStatusCode(), null));
 		model.addAttribute("caseId", nullSafe(() -> userSession.getLandingInfo().getCaseId(), null));
 		userSession.setLandingInfo(LandingInfo.builder().build());
+
+		// Load user's email signature
+		String emailSignature = userProfileService.getSignature(securityUtil.getUserId());
+		model.addAttribute("emailSignature", emailSignature);
+
 		return "compose_mail/compose_mail";
 	}
 

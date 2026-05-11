@@ -53,6 +53,12 @@ public class Inbox {
 	@Column
 	private LocalDate autoReplyEndDate;
 
+	@Column
+	private boolean autoDeleteEnabled;
+
+	@Column
+	private Integer autoDeleteDays;
+
 	@Builder.Default
 	@OneToMany(mappedBy = "inbox", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	private Set<InboxSubscriber> subscribers = new HashSet<>();
