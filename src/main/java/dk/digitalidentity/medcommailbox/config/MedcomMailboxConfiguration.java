@@ -1,18 +1,16 @@
 package dk.digitalidentity.medcommailbox.config;
 
 import dk.digitalidentity.medcommailbox.config.properties.Cpr;
+import dk.digitalidentity.medcommailbox.config.properties.Email;
 import dk.digitalidentity.medcommailbox.config.properties.SwaggerConfiguration;
+import dk.digitalidentity.medcommailbox.config.properties.Sygesikring;
 import java.util.ArrayList;
 import java.util.List;
-
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.stereotype.Component;
-
-import dk.digitalidentity.medcommailbox.config.properties.Cpr;
-import dk.digitalidentity.medcommailbox.config.properties.Email;
-import lombok.Getter;
-import lombok.Setter;
 
 @Component
 @Getter
@@ -33,6 +31,8 @@ public class MedcomMailboxConfiguration {
 	private String s3EncryptionKey = null;
 	@NestedConfigurationProperty
 	private Cpr cpr = new Cpr();
+	@NestedConfigurationProperty
+	private Sygesikring sygesikring = new Sygesikring();
 	private Email email = new Email();
 	private boolean downloadAsPdf = true;
 	@NestedConfigurationProperty

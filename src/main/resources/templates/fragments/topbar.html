@@ -21,7 +21,7 @@
 			<ul class="nav navbar-nav mr-auto">
 				<th:block sec:authorize="isAuthenticated()">
 					<!-- menu -->
-                    <li th:if="${@mailService.constraints != null && @mailService.constraints.size > 0}" class="dropdown show">
+                    <li th:if="${not #maps.isEmpty(@mailService.constraints)}" class="dropdown show">
                         <a data-toggle="dropdown" href="#" aria-expanded="true"> <i class="fa fa-inbox"></i> Indbakke <span th:if="${@mailService.totalUnread > 0}" th:text="${@mailService.totalUnread}" class="label label-primary"></span></a>
                         <ul class="dropdown-menu">
                             <li th:each="entry : ${@mailService.getConstraints()}" th:class="${#ctx.session.selectedInbox != null && #ctx.session.selectedInbox == entry.key ? 'active' : ''}">
@@ -58,6 +58,11 @@
                         </a>
                     </li>
                     <li class="d-lg-none">
+                        <a th:href="@{/profile}">
+                            <i class="fa fa-user-circle-o"></i> &nbsp; Profil
+                        </a>
+                    </li>
+                    <li class="d-lg-none">
                          <a onclick="document.forms['logoutForm'].submit()" type="submit">
                             <i class="fa fa-sign-out"></i> &nbsp; Log ud
                         </a>
@@ -77,6 +82,12 @@
                 <li class="dropdown show">
                     <a data-toggle="dropdown" href="#" aria-expanded="true"> <i class="fa fa-user"></i></a>
                     <ul class="dropdown-menu">
+                        <li>
+                            <a th:href="@{/profile}" style="width:100%;">
+                                <i class="fa fa-user-circle-o"></i> &nbsp; Profil
+                            </a>
+                        </li>
+                        <li class="dropdown-divider"></li>
                         <li>
                             <form role="form" th:action="@{/logout}" method="POST" id="logoutForm">
                                 <a onclick="document.forms['logoutForm'].submit()" type="submit" style="width:100%;">

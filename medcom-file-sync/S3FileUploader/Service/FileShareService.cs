@@ -66,9 +66,9 @@ namespace S3FileUploader.Service
             try
             {
                 var client = new RestClient($"{restUrl}/files");
-                var request = new RestRequest(Method.DELETE);
+                var request = new RestRequest("", Method.Delete);
                 request.AddHeader("ApiKey", apiKey);
-                request.AddParameter("file", fileName, ParameterType.QueryString);
+                request.AddQueryParameter("file", fileName);
 
                 var response = client.Execute(request);
                 _logger.LogInformation("Deleted file " + fileName + " with HTTPStatus: " + response.StatusCode);
@@ -88,21 +88,19 @@ namespace S3FileUploader.Service
                 {
                     fs.SetLength(0);
                     var client = new RestClient($"{restUrl}/files");
-                    var request = new RestRequest(Method.GET);
+                    var request = new RestRequest();
                     request.AddHeader("ApiKey", apiKey);
-                    request.AddParameter("file", fileName, ParameterType.QueryString);
+                    request.AddQueryParameter("file", fileName);
 
-                    // avoid memory buffering of request content
-                    request.ResponseWriter = responseStream =>
+                    using (var stream = client.DownloadStreamAsync(request).GetAwaiter().GetResult())
                     {
-                        using (responseStream)
+                        if (stream != null)
                         {
-                            responseStream.CopyTo(fs);
+                            stream.CopyTo(fs);
                         }
-                    };
-                    var response = client.Execute(request);
+                    }
 
-                    _logger.LogInformation("Download file " + fileName + " with HTTPStatus: " + response.StatusCode);
+                    _logger.LogInformation("Download file " + fileName);
                 }
             }
             catch (Exception ex)
@@ -117,7 +115,7 @@ namespace S3FileUploader.Service
             try
             {
                 var client = new RestClient($"{restUrl}/files/list");
-                var request = new RestRequest(Method.GET);
+                var request = new RestRequest();
                 request.AddHeader("ApiKey", apiKey);
                 var response = client.Execute<List<string>>(request);
 

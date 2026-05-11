@@ -586,6 +586,25 @@ public class EmessageMapper {
         return envelope;
     }
 
+    public dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage createNegativeReceiptForBinary(
+            final String envelopeIdentifier, final String senderEan, final String receiverEan,
+            final String letterIdentifier, final String versionCode,
+            final String refuseText, final String refuseCode, final LocalDateTime now) {
+        final DateTimeFormatter dateFormatterTime = DateTimeFormatter.ofPattern("HH:mm");
+        final dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage eMessage = new dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage();
+        eMessage.setEnvelope(createNegativeEnvelope(now, dateFormatterTime));
+
+        final NegativeReceipt negativeReceipt = createNegativeReceipt2005(receiverEan, senderEan);
+        final NegativeReceipt.OriginalEmessage.OriginalLetter originalLetter = createNegativeOriginalLetter(
+                letterIdentifier, versionCode, refuseText, refuseCode);
+        final NegativeReceipt.OriginalEmessage originalEmessage = createNegativeOriginalMessage(
+                envelopeIdentifier, senderEan, receiverEan);
+        originalEmessage.getOriginalLetters().add(originalLetter);
+        negativeReceipt.setOriginalEmessage(originalEmessage);
+        eMessage.getHospitalReferralsAndDischargeLettersAndOutPatientDischargeLetters().add(negativeReceipt);
+        return eMessage;
+    }
+
     private static NegativeReceiptLetterType createNegativeLetterType2005() {
         NegativeReceiptLetterType letter = new NegativeReceiptLetterType();
         letter.setIdentifier(RandomStringUtils.randomAlphanumeric(14));

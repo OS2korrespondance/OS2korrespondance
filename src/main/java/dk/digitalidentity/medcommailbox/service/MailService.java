@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.lowagie.text.DocumentException;
+import dk.digitalidentity.medcommailbox.dao.InboxDao;
+import dk.digitalidentity.medcommailbox.model.entity.Inbox;
 import dk.digitalidentity.medcommailbox.model.entity.InboxFolder;
 import dk.digitalidentity.medcommailbox.security.SecurityUtil;
 import dk.digitalidentity.medcommailbox.service.dafolo.ArchiveBinaryService;
@@ -45,6 +47,9 @@ import static org.springframework.data.jpa.domain.Specification.where;
 @Service
 @Slf4j
 public class MailService {
+	@Autowired
+	private InboxDao inboxDao;
+
 	@Autowired
 	private MailDao mailDao;
 
@@ -95,14 +100,14 @@ public class MailService {
 
 		final HashMap<String, UnreadInInboxDTO> result = new HashMap<>();
 		for (String constraint : constraints) {
-			long unread = getUnreadForRootFolder(Folder.INBOX, Set.of(constraint));
-			
-			//find matching Sender
 			Sender sender = config.getSenders().stream().filter(s -> s.getEanIdentifier().equals(constraint)).findAny().orElse(null);
 			if (sender == null) {
-				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No sender configured for identifier: " + constraint);
+				log.warn("No sender configured for identifier: {}", constraint);
+				result.put(constraint, new UnreadInInboxDTO(0, "⚠ Lokationsnummer " + constraint + " mangler konfiguration"));
+				continue;
 			}
-			
+
+			long unread = getUnreadForRootFolder(Folder.INBOX, Set.of(constraint));
 			result.put(constraint, new UnreadInInboxDTO(unread, sender.getOrganisationName()));
 		}
 		
@@ -358,5 +363,30 @@ public class MailService {
 		var result = outputStream.toByteArray();
 		outputStream.close();
 		return result;
+	}
+
+	@Transactional
+	public void autoDelete() {
+		for (Inbox inbox : inboxDao.findAll()) {
+			if (!inbox.isAutoDeleteEnabled()) {
+				continue;
+			}
+
+			LocalDateTime cutoff = LocalDateTime.now().minusDays(inbox.getAutoDeleteDays());
+			List<Mail> mailsToAutoDelete = mailDao
+					.findByFolderAndReadTrueAndDraftFalseAndAssociatedIdentifierAndReceivedBefore(
+							Folder.INBOX, inbox.getEanIdentifier(), cutoff);
+
+			for (Mail mail : mailsToAutoDelete) {
+				mail.setFolder(Folder.DELETED);
+				mail.setDeletedDate(LocalDate.now());
+				mailDao.save(mail);
+			}
+
+			if (!mailsToAutoDelete.isEmpty()) {
+				log.info("Auto-deleted {} read mails from inbox {} (EAN: {})",
+						mailsToAutoDelete.size(), inbox.getId(), inbox.getEanIdentifier());
+			}
+		}
 	}
 }

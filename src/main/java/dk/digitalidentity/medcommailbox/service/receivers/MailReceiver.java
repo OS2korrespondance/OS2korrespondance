@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import dk.digitalidentity.medcommailbox.config.Sender;
@@ -100,7 +101,8 @@ public class MailReceiver implements MedcomReceiver {
         if (!(medcomXml.getParsedValue() instanceof Emessage message))  {
             throw new IllegalArgumentException("Emessage object must be of type Emessage");
         }
-        final ClinicalEmail clinicalEmail = getClinicalEmail(message).orElseThrow();
+        final ClinicalEmail clinicalEmail = getClinicalEmail(message).orElseThrow(() ->
+                new IllegalArgumentException("Beskedformatet understøttes ikke: indeholder ingen ClinicalEmail"));
         final String s3Key = medcomXml.getS3Key();
 
         // we have a log on the identifiers already (= it has been received before)
@@ -278,7 +280,12 @@ public class MailReceiver implements MedcomReceiver {
             log.error("Do not know what to do with {}", xml.getS3Key());
             return;
         }
-        final ClinicalEmail clinicalEmail = getClinicalEmail(emessage).orElseThrow();
+        final Optional<ClinicalEmail> clinicalEmailOpt = getClinicalEmail(emessage);
+        if (clinicalEmailOpt.isEmpty()) {
+            sendNegativeReceiptFromRawXml(xml, ex);
+            return;
+        }
+        final ClinicalEmail clinicalEmail = clinicalEmailOpt.get();
         final LocalDateTime now = LocalDateTime.now();
         final String refuseText = refuseTextFromException(ex);
         final String refuseCode = refuseCodeFromException(ex);
@@ -302,6 +309,49 @@ public class MailReceiver implements MedcomReceiver {
         log.setReceiptTts(now);
         log.setReceiptS3FileKey(fileKey);
         logService.save(log);
+
+        FailedS3Key failedS3Key = new FailedS3Key();
+        failedS3Key.setS3FileKey(xml.getS3Key());
+        failedS3KeyService.save(failedS3Key);
+    }
+
+    private void sendNegativeReceiptFromRawXml(final MedcomXml xml, final Exception ex) {
+        try {
+            final javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(false);
+            final org.w3c.dom.Document doc = factory.newDocumentBuilder().parse(new java.io.ByteArrayInputStream(xml.getFileContents()));
+            final javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
+
+            final String envelopeId = xpath.evaluate("/Emessage/Envelope/Identifier", doc);
+            final String letterIdentifier = xpath.evaluate("//Letter/Identifier", doc);
+            final String versionCode = xpath.evaluate("//Letter/VersionCode", doc);
+            final String receiverEan = xpath.evaluate("//Receiver/EANIdentifier", doc);
+            final String senderEan = xpath.evaluate("//Sender/EANIdentifier", doc);
+
+            final LocalDateTime now = LocalDateTime.now();
+            final dk.oio.rep.sundcom_dk.medcom_dk.xml.schemas._2005._08._07.Emessage negReceipt =
+                    emessageMapper.createNegativeReceiptForBinary(envelopeId, senderEan, receiverEan, letterIdentifier, versionCode,
+                            "Systemet understøtter ikke dette beskedformat", "ikke_specificeret", now);
+            final String negativeXml = marshal(marshaller2005, negReceipt);
+            final byte[] file = negativeXml.getBytes(StandardCharsets.ISO_8859_1);
+            final String fileKey = UUID.randomUUID() + "_negative_receipt_" + now.format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".xml";
+            s3Service.upload(config.getS3().getOutDirectory(), fileKey, file);
+
+            MedcomLog medcomLog = new MedcomLog();
+            medcomLog.setMailXml("");
+            medcomLog.setMailTts(now);
+            medcomLog.setIncomming(true);
+            medcomLog.setReceiptType(ReceiptType.NEGATIVE);
+            medcomLog.setEnvelopeIdentifier(envelopeId);
+            medcomLog.setLetterIdentifier(letterIdentifier);
+            medcomLog.setNegativeReceiptReason(ex.getLocalizedMessage());
+            medcomLog.setReceiptXml(negativeXml);
+            medcomLog.setReceiptTts(now);
+            medcomLog.setReceiptS3FileKey(fileKey);
+            logService.save(medcomLog);
+        } catch (final Exception e) {
+            log.error("Failed to send negative receipt for unsupported message {}", xml.getS3Key(), e);
+        }
 
         FailedS3Key failedS3Key = new FailedS3Key();
         failedS3Key.setS3FileKey(xml.getS3Key());

@@ -1,7 +1,6 @@
 package dk.digitalidentity.medcommailbox.security;
 
 import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
-import dk.digitalidentity.medcommailbox.config.RoleConstants;
 import dk.digitalidentity.medcommailbox.config.Sender;
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,7 +10,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;

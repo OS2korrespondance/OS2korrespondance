@@ -10,5 +10,6 @@ import java.util.Optional;
 public interface RecipientDao extends JpaRepository<Recipient, Long> {
 
 	Optional<Recipient> findByIdentifierAndIdentifierCode(String identifier, IdentifierCode code);
+	Optional<Recipient> findFirstByIdentifierAndIdentifierCodeOrderByIdAsc(String identifier, IdentifierCode code);
 	Optional<Recipient> findFirstByEanIdentifier(String eanIdentifier);
 }

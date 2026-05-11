@@ -5,7 +5,16 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
-## [1.4.1] - 2026-03-23
+## [1.6.0] - 2026-05-11
+Release 2026r2
+
+### Added
+- [KORRES-38](https://os2web.atlassian.net/browse/KORRES-38) SSR integration
+- [KORRES-57](https://os2web.atlassian.net/browse/KORRES-57) MedcomFileSync - overvågning
+- [KORRES-55](https://os2web.atlassian.net/browse/KORRES-55) Mulighed for autoslet, som en indstilling
+- [KORRES-56](https://os2web.atlassian.net/browse/KORRES-56) Mail-signatur, som indsættes automatisk og oprettes via info fra AD/rollekatalog
+
+## [1.5.0] - 2026-03-23
 Release 2026r1
 
 ### Added

@@ -8,14 +8,12 @@ import dk.digitalidentity.medcommailbox.security.RequireAdminAccess;
 import dk.digitalidentity.medcommailbox.service.AuditLogService;
 import dk.digitalidentity.medcommailbox.service.RecipientService;
 import dk.digitalidentity.medcommailbox.service.InboxSubscriberService;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import dk.digitalidentity.medcommailbox.controller.rest.dto.AutoReplyForm;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Set;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
 @RequireAdminAccess
@@ -144,6 +141,16 @@ public class AdminRestController {
 		inbox.setAutoReplyMessage(form.message());
 		inbox.setAutoReplyStartDate(form.startDate());
 		inbox.setAutoReplyEndDate(form.endDate());
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	public record AutoDeleteForm(@NotNull String inboxEan, boolean enabled, int autoDeleteDays) {}
+	@Transactional
+	@PostMapping("/rest/admin/settings/setAutoDelete")
+	public ResponseEntity<?> setAutoReply(@Valid @RequestBody AutoDeleteForm form) {
+		Inbox inbox = subscriberService.getOrCreateInbox(form.inboxEan());
+		inbox.setAutoDeleteEnabled(form.enabled());
+		inbox.setAutoDeleteDays(form.autoDeleteDays);
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 

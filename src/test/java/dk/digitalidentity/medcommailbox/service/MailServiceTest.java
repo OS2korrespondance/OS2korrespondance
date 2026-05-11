@@ -5,6 +5,7 @@ import dk.digitalidentity.medcommailbox.config.MedcomMailboxConfiguration;
 import dk.digitalidentity.medcommailbox.config.Sender;
 import dk.digitalidentity.medcommailbox.config.JaxbConfiguration;
 import dk.digitalidentity.medcommailbox.dao.BinaryDao;
+import dk.digitalidentity.medcommailbox.dao.InboxDao;
 import dk.digitalidentity.medcommailbox.dao.MailDao;
 import dk.digitalidentity.medcommailbox.datatables.MailDatatableDao;
 import dk.digitalidentity.medcommailbox.model.entity.Mail;
@@ -46,6 +47,8 @@ public class MailServiceTest {
     private MedcomLogService logServiceMock;
 	@MockitoBean
     private MailDao mailDaoMock;
+	@MockitoBean
+	private InboxDao inboxDaoMock;
 	@MockitoBean
     private MailDatatableDao mailDatatableDaoMock;
 	@MockitoBean

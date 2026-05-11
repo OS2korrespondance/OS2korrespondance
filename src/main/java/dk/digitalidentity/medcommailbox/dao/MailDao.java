@@ -60,4 +60,7 @@ public interface MailDao extends JpaRepository<Mail, Long> {
 	Optional<Mail> findFirstByOriginalFolderAndReferencesObjectIdentifier(Folder originalFolder, @Param("objectIdentifier") final String objectIdentifier);
 
 	long countByRecipientIs(final Recipient recipient);
+
+	List<Mail> findByFolderAndReadTrueAndDraftFalseAndAssociatedIdentifierAndReceivedBefore(
+			Folder folder, String associatedIdentifier, LocalDateTime received);
 }

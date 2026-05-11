@@ -1,7 +1,9 @@
 # Docker image vejledning
 
-## Via pipeline
-
+## Digital-identity
+### Til produktion
+Brug OS2korrespondance-deploy repo
+### Via pipeline
 Pipelinen bygger og pusher automatisk et Docker image til ECR når du opretter et git tag.
 
 ```bash
@@ -18,7 +20,7 @@ ${AWS_ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/os2korrespondance:2026-02-07
 
 ---
 
-## Lokalt
+## Andre
 
 ### Krav
 - Java 21 (Amazon Corretto anbefales)
